@@ -5,4 +5,15 @@ import os
 
 env = Environment(loader = FileSystemLoader('templates'))
 template = env.get_template('index.html')
-print(template.render(str='11'))
+ds = []
+ds.append({
+	'title':'1',
+	'contents':'2'
+	})
+ds.append({
+	'title':'3',
+	'contents':'4'
+	})
+
+with open('tmp.html','wt') as f:
+	f.write(template.render(posts=ds))
