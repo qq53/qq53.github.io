@@ -4,6 +4,7 @@
 from jinja2 import Environment, FileSystemLoader
 import os
 import codecs
+import markdown
 
 env = Environment(loader = FileSystemLoader('templates'))
 template = env.get_template('index.html')
@@ -29,5 +30,8 @@ u = 'http://blog.vap0r.cn'
 
 with codecs.open('templates\\tmp.html', 'w', 'utf-8') as f:
     f.write(template.render(arts=ds, css=css_list, index=u))
+
+html = markdown.markdown('#title')
+print(html)
 	
 exit()
