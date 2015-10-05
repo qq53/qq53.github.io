@@ -1,0 +1,10 @@
+#menu{
+	position: fixed;
+	margin-left: -100px;
+}
+
+#menu > a{
+	display: block;
+	font-size:30px;
+	color: #ff52cd;
+}

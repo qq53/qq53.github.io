@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Hello Amaze UI</title>
+  <title>Vap0r's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -33,16 +33,45 @@
 
   <link rel="stylesheet" href="assets/css/amazeui.min.css">
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/header.css">
+  <link rel="stylesheet" href="assets/css/footer.css">
+  {% for c in css %}
+  <link rel="stylesheet" href="assets/css/{{ c }}.css">	
+{% endfor %}
 </head>
 <body>
 
 <!--在这里编写你的代码-->
 
+{% include "header.html" %}
 
-{% for k in posts %}
-<h1>{{ k.title }}</h1>
-<p>{{ k.contents }}</p>
-{% endfor %}
+<div class="am-g body">
+	<div class="am-u-lg-8 am-u-lg-offset-2" id="contents">
+		{% include "sidebar.html" %}
+		
+		<ul class="arts">
+		{% for art in arts %}
+			{% if art.year %}
+				<div class="time">{{ art.year }}</div>
+			{% endif %}
+			<li>
+				<div class="title">
+					<a class="title-label">{{ art.title }}</a>
+					<div class="tags">
+						<span class="tags-icon"></span>
+						{% for t in art.tags %}
+						<a class="tags-item">{{ t }}</a>
+						{% endfor %}
+					</div>
+				</div>
+			</li>
+		{% endfor %}
+		</ul>
+	</div>
+
+</div>
+
+{% include "footer.html" %}
 
 <!--[if (gte IE 9)|!(IE)]><!-->
 <script src="assets/js/jquery.min.js"></script>
