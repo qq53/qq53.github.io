@@ -1,0 +1,34 @@
+body{
+	padding: 60px;
+}
+
+.title, .title-icon{
+	border-bottom-style: none;
+	box-shadow: none;
+}
+
+.am-form-field{
+	box-shadow: none;
+}
+
+.tags{
+	margin-bottom: 20px;
+}
+
+.preview{
+	padding: 0;
+}
+
+.preview-text{
+	height: 400px;
+}
+
+#output{
+	padding: 10px;
+	overflow: overlay;
+}
+
+#export{
+	margin-top: 20px;
+	width: 100%;
+}

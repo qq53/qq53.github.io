@@ -28,11 +28,7 @@ a:href{
 }
 
 .tags-icon{
-	width: 16px;
-	height: 16px;
-	background: url('../i/tag.png') center no-repeat;
-	background-size: 16px;
-	display: inline-block;
+	font-size: 24px;
 }
 
 .tags-item{
