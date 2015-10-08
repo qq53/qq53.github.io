@@ -19,14 +19,6 @@ def checkArtData(data):
 	else:
 		return True
 
-def writeArt(data):
-	if checkArtData(data) == False:
-		return
-	fn = 'arts/' + str(int(time.time())) + '.json'
-	jdata = json.dumps(data)
-	with codecs.open(fn, 'w', encoding='utf-8') as f:
-		f.write(jdata)
-	
 def loadArt(fn):
 	try:
 		with codecs.open('arts/' + fn + '.json', 'r', encoding='utf-8') as f:
@@ -51,10 +43,10 @@ def scan():
 		d = loadArt(n)
 		if not d:
 			return None
+		d['date'] = datetime.fromtimestamp(int(n)).strftime('%Y/%m/%d')
+		d['file_name'] = n
 		if now != t:
 			now = t
 			d['year'] = now
 		lt.append(d)
 	return lt
-
-print(scan())

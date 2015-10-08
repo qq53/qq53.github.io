@@ -1,0 +1,40 @@
+/* Write your styles */
+.body{
+	padding: 40px;
+}
+
+a{
+	cursor: pointer;
+	font-weight: lighter;
+}
+
+#contents{
+	padding-left: 120px;
+}
+
+#title{
+	text-align: center;
+	font-size: 27px;
+	font-weight: lighter;
+	border-top: 1px solid #ddd;
+	display: block;
+}
+
+#date{
+	color: #888;
+	font-size: 16px;
+	float: right;
+}
+
+#tags{
+	display: block;
+}
+
+#tags > a{
+	color: #888;
+	font-size: 16px;
+}
+
+#content{
+	padding: 10px 0;
+}

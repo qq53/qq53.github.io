@@ -39,11 +39,11 @@
 	<div>
 		<div class="am-input-group">
 		  <span class="am-input-group-label title-icon"><i class="am-icon-file-o am-icon-fw"></i></span>
-		  <input type="text" class="am-form-field title" placeholder="标题">
+		  <input type="text" id="title" class="am-form-field title" placeholder="标题">
 		</div>
 		<div class="am-input-group tags">
 		  <span class="am-input-group-label"><i class="am-icon-paperclip am-icon-fw"></i></span>
-		  <input type="text" class="am-form-field" placeholder="分类">
+		  <input id="tags"  type="text" class="am-form-field" placeholder="分类">
 		</div>
 		<div class="am-u-lg-6 preview" id="textarea">
 			<textarea type="text" id="input" class="am-form-field preview-text" oninput="this.editor.update()" placeholder="内容"></textarea>
@@ -93,7 +93,14 @@
 	}
 	function saveArt(){
 		fn = String( Math.floor(new Date().getTime()/1000) ) + '.json';
-		export_raw(fn, 'test');
+		
+		t = $('#title').val()
+		tg = $('#tags').val()
+		c = $('#input').val()
+		
+		json = '{"title":"' + t + '","tags":"' + tg + '","content":"' + c + '"}'
+		
+		export_raw(fn, json);
 	}
 </script>
 </body>

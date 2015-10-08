@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Vap0r's Blog</title>
+  <title>{{ art.title }} - Vap0r's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="templates/assets/css/amazeui.min.css">
   <link rel="stylesheet" href="templates/assets/css/header.css">
   <link rel="stylesheet" href="templates/assets/css/footer.css">
-  <link rel="stylesheet" href="templates/assets/css/sidebar.css">
-  <link rel="stylesheet" href="templates/assets/css/app.css">
+  <link rel="stylesheet" href="templates/assets/css/single.css">
+  <link rel="stylesheet" href="templates/assets/css/sidebar.css">	
 </head>
 <body>
 
@@ -47,26 +47,19 @@
 	<div class="am-u-lg-8 am-u-lg-offset-2" id="contents">
 		{% include "sidebar.html" %}
 		
-		<ul class="arts">
-		{% for art in arts %}
-			{% if art.year %}
-				<div class="time">{{ art.year }}</div>
-			{% endif %}
-			<li>
-				<div class="title">
-					<a href="{{ index ~ '/' ~ art.file_name ~ '.html' }}" class="title-label">{{ art.title }}</a>
-					<div class="tags">
-						<span class="tags-icon am-icon-tag"></span>
-						{% for t in art.tags %}
-						<a class="tags-item">{{ t }}</a>
-						{% endfor %}
-					</div>
-				</div>
-			</li>
-		{% endfor %}
-		</ul>
+		<div id="article">
+			<div class="tags-icon am-icon-tag" id="tags">
+				{% for t in art.tags %}
+					<a href="#">{{ t }}</a> 
+				{% endfor %}
+				<span id="date">{{ art.date }}</span>
+			</div>		
+			<div id="title">{{ art.title }}</div>
+			<div id="content">
+				{{ art.content }}
+			</div>
+		</div>
 	</div>
-
 </div>
 
 {% include "footer.html" %}

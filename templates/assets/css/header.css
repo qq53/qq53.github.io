@@ -5,3 +5,8 @@
 	font-size: 80px;
 	font-weight: lighter;
 }
+
+body{
+	min-width: 500px;
+	min-height: 800px;
+}
