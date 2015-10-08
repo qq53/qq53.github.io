@@ -26,5 +26,3 @@ for a in arts_list:
 
 with codecs.open('index.html', 'w', 'utf-8') as f:
     f.write(template_index.render(arts=arts_list, index=u))
-	
-

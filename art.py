@@ -9,6 +9,7 @@ import codecs
 import time
 from datetime import datetime
 import os
+from urllib.parse import unquote
 
 def checkArtData(data):
 	try:
@@ -25,7 +26,8 @@ def loadArt(fn):
 			data = f.read()
 			d = json.loads(data)
 			if checkArtData(d) == False:
-				return None			
+				return None
+			d['content'] = unquote(d['content'])
 			d['content'] = markdown(d['content'], output_format='HTML5')
 			return d
 	except:
