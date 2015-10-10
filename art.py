@@ -6,10 +6,8 @@
 from markdown import markdown
 import json
 import codecs
-import time
 from datetime import datetime
 import os
-from urllib.parse import unquote
 
 def checkArtData(data):
 	try:
@@ -22,12 +20,11 @@ def checkArtData(data):
 
 def loadArt(fn):
 	try:
-		with codecs.open('arts/' + fn + '.json', 'r', encoding='utf-8') as f:
+		with codecs.open('arts/' + fn, 'r', encoding='utf-8') as f:
 			data = f.read()
 			d = json.loads(data)
 			if checkArtData(d) == False:
 				return None
-			d['content'] = unquote(d['content'])
 			d['content'] = markdown(d['content'], output_format='HTML5')
 			return d
 	except:
@@ -42,7 +39,7 @@ def scan():
 	for f in files:
 		n = f[:f.find('.')]
 		t = datetime.fromtimestamp(int(n)).strftime('%Y')
-		d = loadArt(n)
+		d = loadArt(f)
 		if not d:
 			return None
 		d['date'] = datetime.fromtimestamp(int(n)).strftime('%Y/%m/%d')
