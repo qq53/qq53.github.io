@@ -11,7 +11,6 @@ from clean import cleanDir
 
 if __name__ == '__main__':
 	cleanDir('.', 'html')
-	cleanDir('arts', 'json')
 
 	env = Environment(loader = FileSystemLoader('templates'))
 	template_index = env.get_template('index.html')

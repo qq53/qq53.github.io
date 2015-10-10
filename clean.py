@@ -12,4 +12,3 @@ def cleanDir(path, type):
 		
 if __name__ == '__main__':
 	cleanDir('.', 'html')
-	cleanDir('arts', 'json')
