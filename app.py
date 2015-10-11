@@ -27,5 +27,10 @@ def write():
 		return '<script>alert("写入成功");location.href="/";</script>'
 	return '写入失败'
 
+@app.route('/edit', methods=['GET'])
+def edit():
+	with codecs.open('edit.htm','r','utf-8') as f:
+		return f.read()
+
 if __name__ == '__main__':
     app.run()
