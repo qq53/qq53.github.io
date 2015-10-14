@@ -54,7 +54,7 @@
 			{% endif %}
 			<li>
 				<div class="title">
-					<a href="{{ index ~ '/' ~ art.file_name ~ '.html' }}" class="title-label">{{ art.title }}</a>
+					<a t={{ art.file_name }} href="{{ art.file_name ~ '.html' }}" class="title-label">{{ art.title }}</a>
 					<div class="tags">
 						<span class="tags-icon am-icon-tag"></span>
 						{% for t in art.tags %}

@@ -22,9 +22,11 @@ a:href{
 }
 
 .title-label{
-	display: block;
+	display: inline-block;
 	font-size: 24px;
 	color: #444;
+	position: relative;
+	z-index: 1;
 }
 
 .tags-icon{
@@ -39,6 +41,7 @@ a:href{
 .arts{
 	list-style: none;
 	margin-top: 0;
+	z-index: 0;
 }
 
 .tags{
@@ -51,4 +54,11 @@ a:href{
 	font-weight: lighter;
 	margin-left: -40px;
 	display: inline-block;
+}
+
+.edit{
+	font-size: 16px;
+	vertical-align: middle;
+	opacity: 0.9;
+	cursor: pointer;
 }
