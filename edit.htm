@@ -36,23 +36,26 @@
 </head>
 <body>
 
-	<form method="post">
+	<form id="form" method="post" action="/edit">
 		<div class="am-input-group">
 		  <span class="am-input-group-label title-icon"><i class="am-icon-file-o am-icon-fw"></i></span>
-		  <input type="text" id="title" class="am-form-field title" placeholder="标题" name="title">
+		  <input type="text" id="title" class="am-form-field title" placeholder="标题" name="title"
+		  value="{{ art.title }}">
 		</div>
 		<div class="am-input-group tags">
 		  <span class="am-input-group-label"><i class="am-icon-paperclip am-icon-fw"></i></span>
-		  <input id="tags"  type="text" class="am-form-field" placeholder="分类" name="tags">
+		  <input id="tags"  type="text" class="am-form-field" placeholder="分类" name="tags"
+		  value="{{ art.tags }}">
 		</div>
 		<div class="am-u-lg-6 preview" id="textarea">
-			<textarea type="text" id="input" class="am-form-field preview-text" oninput="this.editor.update()" placeholder="内容" name="input"></textarea>
+			<textarea type="text" id="input" class="am-form-field preview-text" oninput="this.editor.update()" placeholder="内容" name="input">{{ art.content }}</textarea>
 		</div>
 		<div class="am-u-lg-6 preview">		
 			<div id="output" class="preview-text">
 			</div>
 		</div>
 		<input type="submit" value="保存" class="am-btn am-btn-default" id="export"></input>
+		<input name="k" style="display:none;" value="{{ key }}"></input>
 	</form>
 	
 <script src="static/js/jquery.min.js"></script>

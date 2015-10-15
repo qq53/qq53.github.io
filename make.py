@@ -10,7 +10,7 @@ from art import scan
 from clean import cleanDir
 
 def make():
-	cwd = os.getcwd() + '/'
+	cwd = os.path.split(os.path.realpath(__file__))[0] + '/'
 	cleanDir(cwd, 'html')
 
 	env = Environment(loader = FileSystemLoader(cwd+'templates'))
@@ -19,15 +19,7 @@ def make():
 
 	u = 'http://blog.vap0r.cn'
 
-	#arts_list = scan()
-	art = {
-	'title':'1',
-	'tags':'2',
-	'content':'test',
-	'file_name':'1'
-	}
-	arts_list = []
-	arts_list.append(art)
+	arts_list = scan(cwd)
 
 	for a in arts_list:
 		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf-8') as f:

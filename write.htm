@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>{{ art.title }} - Vap0r's Blog</title>
+  <title>Edit article</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -32,46 +32,47 @@
   <meta name="msapplication-TileColor" content="#0e90d2">
 
   <link rel="stylesheet" href="static/css/amazeui.min.css">
-  <link rel="stylesheet" href="static/css/header.css">
-  <link rel="stylesheet" href="static/css/footer.css">
-  <link rel="stylesheet" href="static/css/single.css">
-  <link rel="stylesheet" href="static/css/sidebar.css">	
+  <link rel="stylesheet" href="static/css/write.css">
 </head>
 <body>
 
-<!--在这里编写你的代码-->
-
-{% include "header.html" %}
-
-<div class="am-g body">
-	<div class="am-u-lg-8 am-u-lg-offset-2" id="contents">
-		{% include "sidebar.html" %}
-		
-		<div id="article">
-			<div class="tags-icon am-icon-tag" id="tags">
-				{% for t in art.tags %}
-					<a href="#">{{ t }}</a> 
-				{% endfor %}
-				<span id="date">{{ art.date }}</span>
-			</div>		
-			<div id="title">{{ art.title }}</div>
-			<div id="content">
-				{{ art.markdown }}
+	<form id="form" method="post" action="/write">
+		<div class="am-input-group">
+		  <span class="am-input-group-label title-icon"><i class="am-icon-file-o am-icon-fw"></i></span>
+		  <input type="text" id="title" class="am-form-field title" placeholder="标题" name="title">
+		</div>
+		<div class="am-input-group tags">
+		  <span class="am-input-group-label"><i class="am-icon-paperclip am-icon-fw"></i></span>
+		  <input id="tags"  type="text" class="am-form-field" placeholder="分类" name="tags">
+		</div>
+		<div class="am-u-lg-6 preview" id="textarea">
+			<textarea type="text" id="input" class="am-form-field preview-text" oninput="this.editor.update()" placeholder="内容" name="input"></textarea>
+		</div>
+		<div class="am-u-lg-6 preview">		
+			<div id="output" class="preview-text">
 			</div>
 		</div>
-	</div>
-</div>
-
-{% include "footer.html" %}
-
-<!--[if (gte IE 9)|!(IE)]><!-->
+		<input type="submit" value="保存" class="am-btn am-btn-default" id="export"></input>
+	</form>
+	
 <script src="static/js/jquery.min.js"></script>
-<!--<![endif]-->
-<!--[if lte IE 8 ]>
-<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
-<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
-<script src="static/js/amazeui.ie8polyfill.min.js"></script>
-<![endif]-->
 <script src="static/js/amazeui.min.js"></script>
+<script src="static/js/parse.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		function Editor(input, preview){
+			this.update = function () {
+				preview.innerHTML = marked(input.value);
+			return false;
+			};
+			input.editor = this;
+			this.update();
+		}
+		$(window).mousemove(function(){
+			$("#output").height( $('#textarea').height()-21 );		
+		});
+		new Editor($("#input")[0], $("#output")[0]);
+	});
+</script>
 </body>
 </html>

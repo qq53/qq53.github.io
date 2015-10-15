@@ -11,4 +11,5 @@ def cleanDir(path, type):
 		os.remove(path+'/'+d)
 		
 if __name__ == '__main__':
-	cleanDir('.', 'html')
+	cwd = os.path.split(os.path.realpath(__file__))[0] + '/'
+	cleanDir(cwd, 'html')
