@@ -41,35 +41,42 @@
 
 <!--在这里编写你的代码-->
 
-{% include "header.html" %}
+<div id="header">
+	<a href="/">Vap0r's Blog</a>
+</div>
 
 <div class="am-g body">
 	<div class="am-u-lg-8 am-u-lg-offset-2" id="contents">
-		{% include "sidebar.html" %}
+		<div id="menu">
+	<a href="/">Home</a>
+	<a href="about.html">About</a>
+</div>
 		
 		<ul class="arts">
-		{% for art in arts %}
-			{% if art.year %}
-				<div class="time">{{ art.year }}</div>
-			{% endif %}
+		
+			
+				<div class="time">2015</div>
+			
 			<li>
 				<div class="title">
-					<a k={{ art.file_name }} href="{{ art.file_name ~ '.html' }}" class="title-label">{{ art.title }}</a>
+					<a k=1445613350 href="1445613350.html" class="title-label">test</a>
 					<div class="tags">
 						<span class="tags-icon am-icon-tag"></span>
-						{% for t in art.tags %}
-						<span class="tags-item">{{ t }}</span>
-						{% endfor %}
+						
+						<span class="tags-item">tag1</span>
+						
 					</div>
 				</div>
 			</li>
-		{% endfor %}
+		
 		</ul>
 	</div>
 
 </div>
 
-{% include "footer.html" %}
+<div id="footer">
+	<p>&copy;2015 Vap0r's Blog.</p>
+</div>
 
 <!--[if (gte IE 9)|!(IE)]><!-->
 <script src="static/js/jquery.min.js"></script>
