@@ -28,6 +28,8 @@ a:href{
 }
 
 .tags-item{
+	position: relative;
+	top: -3px;
 	font-size: 16px;
 	font-weight: lighter;
 }
@@ -55,4 +57,8 @@ a:href{
 	vertical-align: middle;
 	opacity: 0.9;
 	cursor: pointer;
+}
+
+.am-sticky-placeholder{
+	position: absolute;
 }

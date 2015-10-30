@@ -9,6 +9,7 @@ import codecs
 from datetime import datetime
 import os
 import time
+import re
 
 def checkArtData(data):
 	try:
@@ -28,7 +29,7 @@ def writeArt(d, file_path):
 		return True
 	except:
 		print('write file ' + fn + ' error')
-
+		
 def loadArt(fn):
 	try:
 		with codecs.open(fn, 'r', encoding='utf-8') as f:
@@ -50,7 +51,7 @@ def scan(path):
 	for f in files:
 		n = f[:f.find('.')]
 		t = datetime.fromtimestamp(int(n)).strftime('%Y')
-		d = loadArt(path+'arts/'+f)
+		d = show_art(path+'arts/'+f)
 		if not d:
 			return None
 		d['date'] = datetime.fromtimestamp(int(n)).strftime('%Y/%m/%d')
@@ -61,3 +62,32 @@ def scan(path):
 			d['year'] = now
 		lt.append(d)
 	return lt
+	
+def code_trans(d):
+	flag = False
+	nd = d.split('\r\n')
+	for i in range(len(nd)):
+		if flag:
+			if re.match(r'^```\s*', nd[i]):
+				nd[i] = ''
+				flag = False
+				continue
+			nd[i] = '\t' + nd[i]
+			continue
+		if re.match(r'^```\s*', nd[i]):
+			nd[i] = ''
+			flag = True	
+	return '\r\n'.join(nd)
+	
+def show_art(fn):
+	try:
+		with codecs.open(fn, 'r', encoding='utf-8') as f:
+			data = f.read()
+			d = json.loads(data)
+			if checkArtData(d) == False:
+				return None
+			d['content'] = code_trans(d['content'])
+			d['markdown'] = markdown(d['content'], output_format='HTML5')
+			return d
+	except:
+		print('read file ' + fn + ' error')
