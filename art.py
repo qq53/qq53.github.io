@@ -63,12 +63,13 @@ def scan(path):
 		lt.append(d)
 	return lt
 	
-def code_trans(d):
+def code_trans(d, langs):
 	flag = False
 	nd = d.split('\r\n')
 	for i in range(len(nd)):
 		if flag:
 			if re.match(r'^```\s*', nd[i]):
+				#add tag to langs array
 				nd[i] = ''
 				flag = False
 				continue
@@ -86,7 +87,9 @@ def show_art(fn):
 			d = json.loads(data)
 			if checkArtData(d) == False:
 				return None
-			d['content'] = code_trans(d['content'])
+			langs = []
+			d['content'] = code_trans(d['content'], langs)
+			#make tag to html use from langs array
 			d['markdown'] = markdown(d['content'], output_format='HTML5')
 			return d
 	except:
