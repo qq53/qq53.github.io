@@ -68,6 +68,11 @@ def writePOST():
 def artGET(id):
 	with codecs.open(cwd+id+'.html','r','utf-8') as f:
 		return f.read()
+		
+@app.route('/about.htm', methods=['GET'])
+def aboutGET():
+	with codecs.open(cwd+'about.htm','r','utf-8') as f:
+		return f.read()
 
 if __name__ == '__main__':
     app.run(port=80)
