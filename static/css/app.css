@@ -9,6 +9,7 @@ a:href{
 
 .title{
 	font-size: 30px;
+	white-space: nowrap;
 }
 
 .title-label{
@@ -17,6 +18,7 @@ a:href{
 	color: #444;
 	position: relative;
 	z-index: 1;
+	white-space: normal;
 }
 
 .tags-icon{

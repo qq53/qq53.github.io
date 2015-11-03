@@ -63,22 +63,59 @@ def scan(path):
 		lt.append(d)
 	return lt
 	
-def code_trans(d, langs):
+append_arr = []
+code_space_fix = 0
+	
+def code_trans(nd):
 	flag = False
-	nd = d.split('\r\n')
+	fix = 0
+	global code_space_fix
 	for i in range(len(nd)):
+		if nd[i] == '':
+			fix += 1
+			continue
 		if flag:
 			if re.match(r'^```\s*', nd[i]):
-				#add tag to langs array
 				nd[i] = ''
 				flag = False
 				continue
 			nd[i] = '\t' + nd[i]
+		else:
+			#head
+			m = re.match(r'^```(\w+)?\s*', nd[i])
+			if m:
+				nd[i] = ''
+				flag = True	
+				if m.groups():
+					append_arr.append( {'l':i-fix,'tag':'class="lang-'+m.group(1)+'"'} )
+				code_space_fix += 1
+	return nd
+
+def before_mark(d):
+	nd = d.split('\r\n')
+	nd = code_trans(nd)
+	fix = 0
+	global code_space_fix
+	for i in range(len(nd)):
+		if nd[i] == '':
+			fix += 1
 			continue
-		if re.match(r'^```\s*', nd[i]):
-			nd[i] = ''
-			flag = True	
+		m = re.match(r'^{(.+)}(.+)$', nd[i])
+		if m:
+			nd[i] = m.group(2)
+			append_arr.append( {'l':i-fix+code_space_fix,'tag':m.group(1)} )
 	return '\r\n'.join(nd)
+	
+def after_mark(d):
+	nd = d.split('\n')
+	for di in append_arr:
+		sou = nd[di['l']]
+		s = re.findall(r'.*<[^/]+?', sou)[0]
+		spos = sou.find(s)
+		epos = spos + len(s)
+		sou = sou[spos:epos] + ' ' + di['tag'] + sou[epos:]
+		nd[di['l']] = sou
+	return '\n'.join(nd)
 	
 def show_art(fn):
 	try:
@@ -87,10 +124,14 @@ def show_art(fn):
 			d = json.loads(data)
 			if checkArtData(d) == False:
 				return None
-			langs = []
-			d['content'] = code_trans(d['content'], langs)
-			#make tag to html use from langs array
-			d['markdown'] = markdown(d['content'], output_format='HTML5')
+			global append_arr
+			global code_space_fix
+			append_arr = []
+			code_space_fix = 0
+			d['content'] = before_mark(d['content'])
+			#print(append_arr)
+			d['markdown'] = markdown(d['content'], output_format='HTML5')					
+			d['markdown'] = after_mark(d['markdown'])
 			return d
 	except:
 		print('read file ' + fn + ' error')
