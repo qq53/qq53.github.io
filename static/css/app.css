@@ -1,14 +1,10 @@
 /* Write your styles */
 .body{
-	padding: 40px;
+	padding: 40px 0;
 }
 
 a:href{
 	color: red;
-}
-
-#contents{
-	padding-left: 120px;
 }
 
 .title{
@@ -29,7 +25,7 @@ a:href{
 
 .tags-item{
 	position: relative;
-	top: -2px;
+	top: -1px;
 	font-size: 16px;
 	font-weight: lighter;
 }
