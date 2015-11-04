@@ -7,7 +7,7 @@ from flask import Flask, request
 import codecs, time, json
 from urllib.parse import quote
 import os
-from art import loadArt, writeArt
+from art import loadArt, writeArt, del_art
 from jinja2 import Environment, FileSystemLoader
 from make import make
 
@@ -20,7 +20,7 @@ template = env.get_template('edit.htm')
 def home():
 	with codecs.open(cwd+'index.html','r','utf-8') as f:
 		d = f.read()
-		d += "<script>$('.title-label').each(function(){$(this).after(\"<a class='am-icon-edit' 	style='font-size:16px;opacity:0.9;margin-left: 5px;' href='edit?k=\"+$(this).attr('k')+\"'></a>\")});$('#contents').append(\"<div style='text-align:center;'><a class='am-btn am-btn-primary am-icon-plus' href='write'>写文章</a></div>\")</script>"
+		d += "<script>$('.title-label').each(function(){$(this).after(\"<a class='am-icon-edit' 	style='font-size:16px;opacity:0.9;margin-left: 5px;' href='edit?k=\"+$(this).attr('k')+\"'></a><a class='am-icon-remove' style='font-size:18px;opacity:0.9;margin-left: 5px;' href='delete?k=\"+$(this).attr('k')+\"'></a>\")});$('#contents').append(\"<div style='text-align:center;'><a class='am-btn am-btn-primary am-icon-plus' href='write'>写文章</a></div>\")</script>"
 		return d
 
 @app.route('/edit', methods=['GET'])
@@ -63,6 +63,16 @@ def writePOST():
 		make()
 		return '<script>alert("写入成功");location.href="/";</script>'
 	return '写入失败'
+	
+@app.route('/delete', methods=['GET'])
+def deleteGET():
+	k = request.args.get('k', '')
+	if k:
+		del_art(k,base_path = cwd)
+		make()
+		return '<script>alert("删除成功");location.href="/";</script>'
+	else:
+		return 'arguements error'
 	
 @app.route('/<id>.html', methods=['GET'])
 def artGET(id):

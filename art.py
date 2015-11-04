@@ -29,6 +29,14 @@ def writeArt(d, file_path):
 		return True
 	except:
 		print('write file ' + fn + ' error')
+
+def del_art(k, base_path):		
+	try:
+		print(base_path+k+'.html')
+		os.remove(base_path+k+'.html')
+		os.remove(base_path+'arts/'+k+'.json')
+	except:
+		print('write file ' + fn + ' error')
 		
 def loadArt(fn):
 	try:
