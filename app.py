@@ -4,7 +4,7 @@
 # github: github.com/qq53
 
 from flask import Flask, request
-import codecs, time, json
+import time, json
 from urllib.parse import quote
 import os
 from art import loadArt, writeArt, del_art
@@ -18,7 +18,7 @@ template = env.get_template('edit.htm')
 
 @app.route('/', methods=['GET'])
 def home():
-	with codecs.open(cwd+'index.html','r','utf-8') as f:
+	with open(cwd+'index.html','rt') as f:
 		d = f.read()
 		d += "<script>$('.title-label').each(function(){$(this).after(\"<a class='am-icon-edit' 	style='font-size:16px;opacity:0.9;margin-left: 5px;' href='edit?k=\"+$(this).attr('k')+\"'></a><a class='am-icon-remove' style='font-size:18px;opacity:0.9;margin-left: 5px;' href='delete?k=\"+$(this).attr('k')+\"'></a>\")});$('#contents').append(\"<div style='text-align:center;'><a class='am-btn am-btn-primary am-icon-plus' href='write'>写文章</a></div>\")</script>"
 		return d
@@ -48,7 +48,7 @@ def editPOST():
 
 @app.route('/write', methods=['GET'])
 def writeGET():
-	with codecs.open(cwd+'write.htm','r','utf-8') as f:
+	with open(cwd+'write.htm','rt') as f:
 		return f.read()
 
 @app.route('/write', methods=['POST'])
@@ -76,12 +76,12 @@ def deleteGET():
 	
 @app.route('/<id>.html', methods=['GET'])
 def artGET(id):
-	with codecs.open(cwd+id+'.html','r','utf-8') as f:
+	with open(cwd+id+'.html','rt') as f:
 		return f.read()
 		
 @app.route('/about.htm', methods=['GET'])
 def aboutGET():
-	with codecs.open(cwd+'about.htm','r','utf-8') as f:
+	with open(cwd+'about.htm','rt') as f:
 		return f.read()
 
 if __name__ == '__main__':

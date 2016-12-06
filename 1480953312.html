@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>INTELæ‰‹å†ŒVTç¿»è¯‘ - Vap0r's Blog</title>
+  <title>INTELÊÖ²áVT¼ÇÂ¼ - Vap0r's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -39,7 +39,7 @@
 </head>
 <body>
 
-<!--åœ¨è¿™é‡Œç¼–å†™ä½ çš„ä»£ç -->
+<!--ÔÚÕâÀï±àĞ´ÄãµÄ´úÂë-->
 
 <div id="header">
 	<a href="/">Vap0r's Blog</a>
@@ -59,18 +59,37 @@
 				
 				<span id="date">2016/12/05</span>
 			</div>		
-			<div id="title">INTELæ‰‹å†ŒVTç¿»è¯‘</div>
+			<div id="title">INTELÊÖ²áVT¼ÇÂ¼</div>
 			<div id="content">
 				<h1>VMCSs</h1>
 <ul>
-<li>VMPTRLD æ¿€æ´»å¹¶æˆä¸ºå½“å‰çš„VMCS</li>
-<li>VMCS linkæŒ‡é’ˆåŸŸ</li>
-<li>VMCLEARåä¹‹</li>
-<li>VMPTRST å­˜å‚¨VMCSåˆ°åœ°å€ï¼Œå¦‚æœæ²¡æœ‰å½“å‰VMCSï¼Œåˆ™å€¼ä¸ºFFFFFFFF_FFFFFFFFH</li>
+<li>VMPTRLD ¼¤»î²¢³ÉÎªµ±Ç°µÄVMCS</li>
+<li>VMCS linkÖ¸ÕëÓò</li>
+<li>VMCLEAR·´Ö®</li>
+<li>VMPTRST ´æ´¢VMCSµ½µØÖ·£¬Èç¹ûÃ»ÓĞµ±Ç°VMCS£¬ÔòÖµÎªFFFFFFFF_FFFFFFFFH</li>
 </ul>
-<p>VMCSå¯åŠ¨çŠ¶æ€DFAå¦‚ä¸‹</p>
+<p>VMCSÆô¶¯×´Ì¬DFAÈçÏÂ</p>
 <p><img alt="img" src="static\imgs\20161206002120.png"></p>
-<p>å…¶ä¸­æ²¡æœ‰è¯´æ˜æ‰€æœ‰SHADOW VMCSè½¬æ¢æˆæ´»è·ƒçš„æ–¹å¼</p>
+<p class="lang-c">ÆäÖĞÃ»ÓĞËµÃ÷ËùÓĞSHADOW VMCS×ª»»³É»îÔ¾µÄ·½Ê½</p>
+<h3>VMCSÓò¸ñÊ½</h3>
+<pre><code>Byte Offset          Contents  
+0                    Bits 30:0: VMCS revision identifier  
+                     Bit 31: shadow-VMCS indicator
+4                    VMX-abort indicator  
+8                    VMCS data
+</code></pre>
+<h5>VMCS DATA</h5>
+<ul>
+<li>Guest-state area. Processor state is saved into the guest-state area on VM exits and loaded from there on
+VM entries.</li>
+<li>Host-state area. Processor state is loaded from the host-state area on VM exits.</li>
+<li>VM-execution control fields. These fields control processor behavior in VMX non-root operation. They
+determine in part the causes of VM exits.</li>
+<li>VM-exit control fields. These fields control VM exits.</li>
+<li>VM-entry control fields. These fields control VM entries.</li>
+<li>VM-exit information fields. These fields receive information on VM exits and describe the cause and the
+nature of VM exits. On some processors, these fields are read-only.</li>
+</ul>
 			</div>
 		</div>
 	</div>

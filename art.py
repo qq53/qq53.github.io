@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# coding: utf8
 # author: vap0r
 # github: github.com/qq53
 
 from markdown import markdown
 import json
-import codecs
 from datetime import datetime
 import os
 import time
@@ -17,12 +16,12 @@ def checkArtData(data):
 	except:
 		print('Error article data format, must have ["title", "tags", "content"]')
 		return False
-	else:
+	finally:
 		return True
 
 def writeArt(d, file_path):		
 	try:
-		with codecs.open(file_path, 'w', encoding='utf-8') as f:
+		with open(file_path, 'w') as f:
 			if checkArtData(d) == False:
 				return None
 			f.write(json.dumps(d))
@@ -40,7 +39,7 @@ def del_art(k, base_path):
 		
 def loadArt(fn):
 	try:
-		with codecs.open(fn, 'r', encoding='utf-8') as f:
+		with open(fn, 'rt') as f:
 			data = f.read()
 			d = json.loads(data)
 			if checkArtData(d) == False:
@@ -79,6 +78,7 @@ def code_trans(nd):
 	fix = 0
 	global code_space_fix
 	for i in range(len(nd)):
+		print(nd[i])
 		if nd[i] == '':
 			fix += 1
 			continue
@@ -127,7 +127,7 @@ def after_mark(d):
 	
 def show_art(fn):
 	try:
-		with codecs.open(fn, 'r', encoding='utf-8') as f:
+		with open(fn, 'rt') as f:
 			data = f.read()
 			d = json.loads(data)
 			if checkArtData(d) == False:
