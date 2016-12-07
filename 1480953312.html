@@ -90,6 +90,15 @@ determine in part the causes of VM exits.</li>
 <li>VM-exit information fields. These fields receive information on VM exits and describe the cause and the
 nature of VM exits. On some processors, these fields are read-only.</li>
 </ul>
+<h5>Basic VM-Exit Information</h5>
+<p>The 31 Bit Position of VM Exit reason is indicate VM-entry failure</p>
+<h5>VMCS使用要点</h5>
+<ul>
+<li>VMCS不应该在多个逻辑处理器上设置为活动状态。从一个逻辑处理器迁移到另一个应该对此VMCS执行VMCLEAR指令</li>
+<li>不要更改活动状态VMCS的shadow-VMCS 标志</li>
+<li>修改VMCS使用VMREAD和VMWRITE，不要直接读写内存(在执行VMPTRLD前删除所有VMCS的线性地址映射，在VMCLEAR前不要重映射)</li>
+<li>VMXOFF或者失去电源逻辑处理器之前使用VMCLEAR</li>
+</ul>
 			</div>
 		</div>
 	</div>
