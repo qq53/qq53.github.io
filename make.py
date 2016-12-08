@@ -21,7 +21,7 @@ def make():
 	arts_list = scan(cwd)
 
 	for a in arts_list:
-		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf-8') as f:
+		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf_8_sig') as f:
 			f.write(template_single.render(art=a, index=u))
 
 	with open(cwd+'index.html', 'wt') as f:
