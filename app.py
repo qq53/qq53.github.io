@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+﻿#!/usr/bin/env python3
+# coding: utf-8
 # author: vap0r
 # github: github.com/qq53
 
 from flask import Flask, request
-import time, json
+import time, json, codecs
 from urllib.parse import quote
 import os
 from art import loadArt, writeArt, del_art
@@ -76,7 +76,7 @@ def deleteGET():
 	
 @app.route('/<id>.html', methods=['GET'])
 def artGET(id):
-	with open(cwd+id+'.html','rt') as f:
+	with codecs.open(cwd+id+'.html','r','utf-8-sig') as f:
 		return f.read()
 		
 @app.route('/about.htm', methods=['GET'])
