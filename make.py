@@ -24,7 +24,7 @@ def make():
 		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf_8') as f:
 			f.write(template_single.render(art=a, index=u))
 
-	with open(cwd+'index.html', 'wt') as f:
+	with codecs.open(cwd+'index.html', 'w', 'utf_8') as f:
 		f.write(template_index.render(arts=arts_list, index=u))
 
 if __name__ == '__main__':
