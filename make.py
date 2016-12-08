@@ -4,7 +4,7 @@
 # github: github.com/qq53
 
 from jinja2 import Environment, FileSystemLoader
-import os
+import os, codecs
 from art import scan
 from clean import cleanDir
 
@@ -21,10 +21,10 @@ def make():
 	arts_list = scan(cwd)
 
 	for a in arts_list:
-		with open(cwd+a['file_name']+'.html', 'w') as f:
+		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf-8') as f:
 			f.write(template_single.render(art=a, index=u))
 
-	with open(cwd+'index.html', 'w') as f:
+	with open(cwd+'index.html', 'wt') as f:
 		f.write(template_index.render(arts=arts_list, index=u))
 
 if __name__ == '__main__':
