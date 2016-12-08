@@ -1,12 +1,13 @@
-<!doctype html>
+﻿<!doctype html>
 <html class="no-js">
 <head>
+  <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="description" content="">
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>INTEL�ֲ�VT 25�¼�¼ - Vap0r's Blog</title>
+  <title>INTEL手册VT 25章记录 - Vap0r's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -38,7 +39,7 @@
 </head>
 <body>
 
-<!--�������д��Ĵ���-->
+<!--在这里编写你的代码-->
 
 <div id="header">
 	<a href="/">Vap0r's Blog</a>
@@ -58,19 +59,19 @@
 				
 				<span id="date">2016/12/05</span>
 			</div>		
-			<div id="title">INTEL�ֲ�VT 25�¼�¼</div>
+			<div id="title">INTEL手册VT 25章记录</div>
 			<div id="content">
 				<h1>VMCSs</h1>
 <ul>
-<li>VMPTRLD �����Ϊ��ǰ��VMCS</li>
-<li>VMCS linkָ����</li>
-<li>VMCLEAR��֮</li>
-<li>VMPTRST �洢VMCS����ַ�����û�е�ǰVMCS����ֵΪFFFFFFFF_FFFFFFFFH</li>
+<li>VMPTRLD 激活并成为当前的VMCS</li>
+<li>VMCS link指针域</li>
+<li>VMCLEAR反之</li>
+<li>VMPTRST 存储VMCS到地址，如果没有当前VMCS，则值为FFFFFFFF_FFFFFFFFH</li>
 </ul>
-<p>VMCS����״̬DFA����</p>
+<p>VMCS启动状态DFA如下</p>
 <p><img alt="img" src="static\imgs\20161206002120.png"></p>
-<p class="lang-c">����û��˵������SHADOW VMCSת���ɻ�Ծ�ķ�ʽ</p>
-<h3>VMCS���ʽ</h3>
+<p class="lang-c">其中没有说明所有SHADOW VMCS转换成活跃的方式</p>
+<h3>VMCS域格式</h3>
 <pre><code>Byte Offset          Contents  
 0                    Bits 30:0: VMCS revision identifier  
                      Bit 31: shadow-VMCS indicator
@@ -91,60 +92,60 @@ nature of VM exits. On some processors, these fields are read-only.</li>
 </ul>
 <h5>Basic VM-Exit Information</h5>
 <p>The 31 Bit Position of VM Exit reason is indicate VM-entry failure</p>
-<h5>VMCSʹ��Ҫ��</h5>
+<h5>VMCS使用要点</h5>
 <ul>
-<li>VMCS��Ӧ���ڶ���߼�������������Ϊ�״̬����һ���߼�������Ǩ�Ƶ���һ��Ӧ�öԴ�VMCSִ��VMCLEARָ��</li>
-<li>��Ҫ���Ļ״̬VMCS��shadow-VMCS ��־</li>
-<li>�޸�VMCSʹ��VMREAD��VMWRITE����Ҫֱ�Ӷ�д�ڴ�(��ִ��VMPTRLDǰɾ������VMCS�����Ե�ַӳ�䣬��VMCLEARǰ��Ҫ��ӳ��)</li>
-<li>VMXOFF����ʧȥ��Դ�߼�������֮ǰʹ��VMCLEAR</li>
-<li>��ʼ��VMCSӦ�����ȵ���VMCLEAR</li>
-<li>�޸�VMCSӦ��ȷ��û��VMX non-root�������õ����е�����</li>
-<li>VMXONָ�����������4K���룬ִ��VMXON�󣬲�Ӧ��VMXOFFǰ�޸Ĵ�����</li>
+<li>VMCS不应该在多个逻辑处理器上设置为活动状态。从一个逻辑处理器迁移到另一个应该对此VMCS执行VMCLEAR指令</li>
+<li>不要更改活动状态VMCS的shadow-VMCS 标志</li>
+<li>修改VMCS使用VMREAD和VMWRITE，不要直接读写内存(在执行VMPTRLD前删除所有VMCS的线性地址映射，在VMCLEAR前不要重映射)</li>
+<li>VMXOFF或者失去电源逻辑处理器之前使用VMCLEAR</li>
+<li>初始化VMCS应该首先调用VMCLEAR</li>
+<li>修改VMCS应该确保没有VMX non-root操作会用到其中的数据</li>
+<li>VMXON指令操作数必须4K对齐，执行VMXON后，不应在VMXOFF前修改此区域</li>
 </ul>
-<h1>��ش������ȼ�</h1>
-<p>���²���������쳣����VM EXIT��
--  ��Ȩ�ȼ�����ָ�TSS��I/OȨ��λ��������R3����RDMSR���������VM EXIT
--  ���ض�ָ�������������VM EXIT������LWSW
--  unconditional I/O����I/O bitmaps����λ���������ȼ��ߣ�
-  -  ͨ�ñ�������INS��ES�Σ�OUTS��DS�Σ�����ʹ��ָ�����η���
-  -  ͨ�ñ������󣬳�����������ƫ������
-  -  ���������
-- ��ȥ���ϵ�VM EXITS���쳣�������ȼ���</p>
-<h1>������VM EXITSָ��</h1>
+<h1>相关错误优先级</h1>
+<p>以下操作会产生异常而非VM EXIT：
+-  特权等级错误指令、TSS中I/O权限位错误。例如R3调用RDMSR，不会产生VM EXIT
+-  当特定指令操作数优先于VM EXIT，例如LWSW
+-  unconditional I/O或者I/O bitmaps控制位比以下优先级高：
+  -  通用保护错误，INS用ES段，OUTS用DS段（除非使用指令修饰符）
+  -  通用保护错误，超过段描述符偏移限制
+  -  对齐检查错误
+- 除去以上的VM EXITS比异常错误优先级高</p>
+<h1>无条件VM EXITS指令</h1>
 <p>CPUID GETSEC INVD XSETBV INVEPT INVVPID VMCALL VMCLEAR VMLAUNCH VMPTRLD VMPTRST VMRESUME VMXOFF VMXON</p>
-<h1>������VM EXITSָ��</h1>
+<h1>有条件VM EXITS指令</h1>
 <p>CLTS ENCLS IN INS/INSB/INSW/INSD OUT OUTS/OUTSB/OUTSW/OUTSD INVLPG INVPCID LGDT LIDT LLDT LTR SGDT SIDT SLDT STR LMSW MONITOR MOV XX,CR3 MOV XX,CR8 MOV CR0,XX MOV CR3,XX MOV CR4,XX MOV CR8,XX MOVDR MWAIT PAUSE RDMSR RDPMC RDRAND RDSED RDTSC RDTSCP RSM VMREAD VMWRITE WBINVD WRMSR XRSTORS XSAVES</p>
-<h1>��������VM EXITS ԭ��</h1>
+<h1>其他导致VM EXITS 原因</h1>
 <ul>
-<li>�쳣���������塢��ֹ������exception bitmap������INT3 INTO BOUND UD2ָ��</li>
-<li>Triple����</li>
-<li>�ⲿ�ж�</li>
+<li>异常（错误、陷阱、终止）基于exception bitmap，包括INT3 INTO BOUND UD2指令</li>
+<li>Triple错误</li>
+<li>外部中断</li>
 <li>NMIs</li>
-<li>INIT�ź�</li>
+<li>INIT信号</li>
 <li>Start-up IPIs</li>
-<li>�����л�</li>
+<li>任务切换</li>
 <li>SMIs</li>
 <li>VMX-preemption timer</li>
-<li>interrupt-window exiting��־λ</li>
-<li>NMI-windows exiting��־λ</li>
+<li>interrupt-window exiting标志位</li>
+<li>NMI-windows exiting标志位</li>
 </ul>
-<h1>VMX non-root�仯��ָ��</h1>
+<h1>VMX non-root变化的指令</h1>
 <p>CLTS INVPCID IRET LWSW MOV XX,CR0 MOV XX,CR3 MOV XX,CR4 MOV XX,CR8 MOV CR0,XX MOV CR3,XX
 MOV CR4,XX MOV CR8,XX NWAIT RDMSR RDPID RDTSC RDTSCP SWSW WRMSR XRSTORS XSAVES</p>
-<h1>����VMX non-root�仯</h1>
+<h1>其他VMX non-root变化</h1>
 <ul>
-<li>external-interrupt exiting��־��λ��Ӱ��RFLAGS.IF��STI��MOV SS��NMIs��Ϊ</li>
+<li>external-interrupt exiting标志置位，影响RFLAGS.IF、STI、MOV SS、NMIs行为</li>
 </ul>
-<h1>VMX non-root��������</h1>
+<h1>VMX non-root特殊特性</h1>
 <ul>
 <li>VMX-preemption timer </li>
 <li>monitor trap flag</li>
-<li>����ͻ�������ַ</li>
-<li>VM����</li>
-<li>���⻯�쳣</li>
+<li>翻译客户物理地址</li>
+<li>VM函数</li>
+<li>虚拟化异常</li>
 </ul>
-<h1>�����ƿͻ���</h1>
-<p>�ڶ���֮��Ĵ�����֧���ڷǷ�ҳ����ģʽ������</p>
+<h1>无限制客户机</h1>
+<p>第二个之后的处理器支持在非分页保护模式下运行</p>
 			</div>
 		</div>
 	</div>
