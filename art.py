@@ -51,7 +51,7 @@ def loadArt(fn):
 
 def scan(path):
 	files = os.listdir(path+'arts/')
-	files = sorted(files)
+	files = sorted(files,reverse=True)
 	
 	now = ''
 	lt = []

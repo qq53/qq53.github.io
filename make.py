@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# coding=utf-8
 # author: vap0r
 # github: github.com/qq53
 
@@ -21,7 +21,7 @@ def make():
 	arts_list = scan(cwd)
 
 	for a in arts_list:
-		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf_8_sig') as f:
+		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf_8') as f:
 			f.write(template_single.render(art=a, index=u))
 
 	with open(cwd+'index.html', 'wt') as f:
