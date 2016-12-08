@@ -1283,3 +1283,32 @@ if (typeof module !== 'undefined' && typeof exports === 'object') {
 }).call(function() {
   return this || (typeof window !== 'undefined' ? window : global);
 }());
+
+scrollabled = true;
+
+$('#output').scroll(function(){
+	if( scrollabled ){
+		var selfHeight = this.scrollHeight-this.clientHeight;
+		var otherHeight = $('#input')[0].scrollHeight-$('#input')[0].clientHeight;
+		$('#input')[0].scrollTop = Math.floor(this.scrollTop / selfHeight * otherHeight);
+	}
+	scrollabled ^= true;
+});
+
+$('#input').scroll(function(){
+	if( scrollabled ){
+		var selfHeight = this.scrollHeight-this.clientHeight;
+		var otherHeight = $('#output')[0].scrollHeight-$('#output')[0].clientHeight;
+		$('#output')[0].scrollTop = Math.floor(this.scrollTop / selfHeight * otherHeight);
+	}
+	scrollabled ^= true;
+});
+
+$('#input').keydown(function(event){
+	if( event.which == '\n' ){
+		var selfHeight = this.scrollHeight-this.clientHeight;
+		var otherHeight = $('#output')[0].scrollHeight-$('#output')[0].clientHeight;
+		$('#output')[0].scrollTop = otherHeight;
+		this.scrollTop = selfHeight;
+	}
+});

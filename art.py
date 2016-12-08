@@ -78,7 +78,6 @@ def code_trans(nd):
 	fix = 0
 	global code_space_fix
 	for i in range(len(nd)):
-		print(nd[i])
 		if nd[i] == '':
 			fix += 1
 			continue

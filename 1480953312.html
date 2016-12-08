@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>INTEL手册VT记录 - Vap0r's Blog</title>
+  <title>INTEL手册VT 25章记录 - Vap0r's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -59,7 +59,7 @@
 				
 				<span id="date">2016/12/05</span>
 			</div>		
-			<div id="title">INTEL手册VT记录</div>
+			<div id="title">INTEL手册VT 25章记录</div>
 			<div id="content">
 				<h1>VMCSs</h1>
 <ul>
@@ -98,7 +98,54 @@ nature of VM exits. On some processors, these fields are read-only.</li>
 <li>不要更改活动状态VMCS的shadow-VMCS 标志</li>
 <li>修改VMCS使用VMREAD和VMWRITE，不要直接读写内存(在执行VMPTRLD前删除所有VMCS的线性地址映射，在VMCLEAR前不要重映射)</li>
 <li>VMXOFF或者失去电源逻辑处理器之前使用VMCLEAR</li>
+<li>初始化VMCS应该首先调用VMCLEAR</li>
+<li>修改VMCS应该确保没有VMX non-root操作会用到其中的数据</li>
+<li>VMXON指令操作数必须4K对齐，执行VMXON后，不应在VMXOFF前修改此区域</li>
 </ul>
+<h1>相关错误优先级</h1>
+<p>以下操作会产生异常而非VM EXIT：
+-  特权等级错误指令、TSS中I/O权限位错误。例如R3调用RDMSR，不会产生VM EXIT
+-  当特定指令操作数优先于VM EXIT，例如LWSW
+-  unconditional I/O或者I/O bitmaps控制位比以下优先级高：
+  -  通用保护错误，INS用ES段，OUTS用DS段（除非使用指令修饰符）
+  -  通用保护错误，超过段描述符偏移限制
+  -  对齐检查错误
+- 除去以上的VM EXITS比异常错误优先级高</p>
+<h1>无条件VM EXITS指令</h1>
+<p>CPUID GETSEC INVD XSETBV INVEPT INVVPID VMCALL VMCLEAR VMLAUNCH VMPTRLD VMPTRST VMRESUME VMXOFF VMXON</p>
+<h1>有条件VM EXITS指令</h1>
+<p>CLTS ENCLS IN INS/INSB/INSW/INSD OUT OUTS/OUTSB/OUTSW/OUTSD INVLPG INVPCID LGDT LIDT LLDT LTR SGDT SIDT SLDT STR LMSW MONITOR MOV XX,CR3 MOV XX,CR8 MOV CR0,XX MOV CR3,XX MOV CR4,XX MOV CR8,XX MOVDR MWAIT PAUSE RDMSR RDPMC RDRAND RDSED RDTSC RDTSCP RSM VMREAD VMWRITE WBINVD WRMSR XRSTORS XSAVES</p>
+<h1>其他导致VM EXITS 原因</h1>
+<ul>
+<li>异常（错误、陷阱、终止）基于exception bitmap，包括INT3 INTO BOUND UD2指令</li>
+<li>Triple错误</li>
+<li>外部中断</li>
+<li>NMIs</li>
+<li>INIT信号</li>
+<li>Start-up IPIs</li>
+<li>任务切换</li>
+<li>SMIs</li>
+<li>VMX-preemption timer</li>
+<li>interrupt-window exiting标志位</li>
+<li>NMI-windows exiting标志位</li>
+</ul>
+<h1>VMX non-root变化的指令</h1>
+<p>CLTS INVPCID IRET LWSW MOV XX,CR0 MOV XX,CR3 MOV XX,CR4 MOV XX,CR8 MOV CR0,XX MOV CR3,XX
+MOV CR4,XX MOV CR8,XX NWAIT RDMSR RDPID RDTSC RDTSCP SWSW WRMSR XRSTORS XSAVES</p>
+<h1>其他VMX non-root变化</h1>
+<ul>
+<li>external-interrupt exiting标志置位，影响RFLAGS.IF、STI、MOV SS、NMIs行为</li>
+</ul>
+<h1>VMX non-root特殊特性</h1>
+<ul>
+<li>VMX-preemption timer </li>
+<li>monitor trap flag</li>
+<li>翻译客户物理地址</li>
+<li>VM函数</li>
+<li>虚拟化异常</li>
+</ul>
+<h1>无限制客户机</h1>
+<p>第二个之后的处理器支持在非分页保护模式下运行</p>
 			</div>
 		</div>
 	</div>
