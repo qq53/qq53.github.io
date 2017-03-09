@@ -35,7 +35,8 @@
   <link rel="stylesheet" href="static/css/header.css">
   <link rel="stylesheet" href="static/css/footer.css">
   <link rel="stylesheet" href="static/css/single.css">
-  <link rel="stylesheet" href="static/css/sidebar.css">	
+  <link rel="stylesheet" href="static/css/sidebar.css">
+  <link rel="stylesheet" href="static/css/railscasts.min.css">
 </head>
 <body>
 
@@ -109,6 +110,7 @@
 <h1>事件注入</h1>
 <p>当interruption-information域被置位，会根据中断类型分别处理</p>
 <h3>定向事件注入</h3>
+<p>在客户机在家完后，通过指定一个IDT向量完成事件注入。如果在此过程中发生嵌套异常，行为取决于exception bitmap</p>
 			</div>
 		</div>
 	</div>
@@ -127,5 +129,7 @@
 <script src="static/js/amazeui.ie8polyfill.min.js"></script>
 <![endif]-->
 <script src="static/js/amazeui.min.js"></script>
+<script src="static/js/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
 </body>
 </html>

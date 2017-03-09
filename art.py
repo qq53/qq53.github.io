@@ -31,9 +31,8 @@ def writeArt(d, file_path):
 
 def del_art(k, base_path):		
 	try:
-		print(base_path+k+'.html')
 		os.remove(base_path+k+'.html')
-		os.remove(base_path+'arts/'+k+'.json')
+		os.remove(base_path+'arts\\'+k+'.json')
 	except:
 		print('write file ' + fn + ' error')
 		
@@ -50,7 +49,7 @@ def loadArt(fn):
 		print('read file ' + fn + ' error')
 
 def scan(path):
-	files = os.listdir(path+'arts/')
+	files = os.listdir(path+'arts\\')
 	files = sorted(files,reverse=True)
 	
 	now = ''
@@ -58,7 +57,7 @@ def scan(path):
 	for f in files:
 		n = f[:f.find('.')]
 		t = datetime.fromtimestamp(int(n)).strftime('%Y')
-		d = show_art(path+'arts/'+f)
+		d = show_art(path+'arts\\'+f)
 		if not d:
 			return None
 		d['date'] = datetime.fromtimestamp(int(n)).strftime('%Y/%m/%d')
@@ -71,53 +70,59 @@ def scan(path):
 	return lt
 	
 append_arr = []
-code_space_fix = 0
 	
 def code_trans(nd):
 	flag = False
 	fix = 0
-	global code_space_fix
+	code_fix = 0
+
 	for i in range(len(nd)):
 		if nd[i] == '':
 			fix += 1
 			continue
 		if flag:
 			if re.match(r'^```\s*', nd[i]):
-				nd[i] = ''
 				flag = False
 				continue
 			nd[i] = '\t' + nd[i]
 		else:
 			#head
-			m = re.match(r'^```(\w+)?\s*', nd[i])
-			if m:
+			#if len(m) > 0:
+			if nd[i][:3] == '```':
+				flag = True
+				m = re.findall(r'^```(\w+)?\s*', nd[i])	
 				nd[i] = ''
-				flag = True	
-				if m.groups():
-					append_arr.append( {'l':i-fix,'tag':'class="lang-'+m.group(1)+'"'} )
-				code_space_fix += 1
+				if len(m) > 0:
+					append_arr.append( {'l':i-fix-code_fix,'tag':'class="lang-'+m[0]+'"'} )
+				code_fix += 1
+				
 	return nd
 
 def before_mark(d):
 	nd = d.split('\r\n')
 	nd = code_trans(nd)
 	fix = 0
-	global code_space_fix
+	code_fix = 0
+	#print(json.dumps(nd,indent=2))
 	for i in range(len(nd)):
+		if nd[i] == '```':
+			nd[i] = ''
+			code_fix += 1
 		if nd[i] == '':
 			fix += 1
 			continue
 		m = re.match(r'^{(.+)}(.+)$', nd[i])
 		if m:
-			nd[i] = m.group(2)
-			append_arr.append( {'l':i-fix+code_space_fix,'tag':m.group(1)} )
+			nd[i] = m.group(2)	
+			append_arr.append( {'l':i-fix+code_fix,'tag':m.group(1)} )
 	return '\r\n'.join(nd)
 	
 def after_mark(d):
 	nd = d.split('\n')
+	#print(json.dumps(nd,indent=2))
 	for di in append_arr:
 		sou = nd[di['l']]
-		s = re.findall(r'.*<[^/]+?', sou)[0]
+		s = re.findall(r'<[^/<>]+', sou)[0]
 		spos = sou.find(s)
 		epos = spos + len(s)
 		sou = sou[spos:epos] + ' ' + di['tag'] + sou[epos:]
@@ -132,12 +137,9 @@ def show_art(fn):
 			if checkArtData(d) == False:
 				return None
 			global append_arr
-			global code_space_fix
 			append_arr = []
-			code_space_fix = 0
 			d['content'] = before_mark(d['content'])
-			#print(append_arr)
-			d['markdown'] = markdown(d['content'], output_format='HTML5')					
+			d['markdown'] = markdown(d['content'], output_format='HTML5')
 			d['markdown'] = after_mark(d['markdown'])
 			return d
 	except:
