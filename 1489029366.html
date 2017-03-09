@@ -67,7 +67,9 @@
 				<p>刚接触EXP，欢迎指正错误。</p>
 <h1>1. 相关信息</h1>
 <h3>受影响软件：Adobe Reader 8.2.4 - 9.3.4</h3>
-<h3>生成POC脚本(修改已不再依赖Metasploit):  <a href="data/cve-2010-2883/adobe_cooltype_sing.rb">adobe_cooltype_sing.rb</a></h3>
+<h3>相关资源:</h3>
+<p>生成POC脚本(修改已不再依赖Metasploit):  <a href="data/cve-2010-2883/adobe_cooltype_sing.rb">adobe_cooltype_sing.rb</a></p>
+<p>所需TTF文件:  <a href="data/cve-2010-2883/cve-2010-2883.ttf">cve-2010-2883.ttf</a></p>
 <h3>漏洞成因: strcat导致栈覆盖this指针，控制虚函数表</h3>
 <h1>2. POC分析</h1>
 <p>造成栈溢出问题出在strcat调用,位于0x806CD76</p>
