@@ -14,7 +14,7 @@ from make import make
 app = Flask(__name__)
 cwd = os.path.split(os.path.realpath(__file__))[0] + '/'
 env = Environment(loader = FileSystemLoader(cwd))
-template = env.get_template('edit.html')
+template = env.get_template('edit.htm')
 
 @app.route('/', methods=['GET'])
 def home():
@@ -79,9 +79,9 @@ def artGET(id):
 	with codecs.open(cwd+id+'.html','r','utf-8') as f:
 		return f.read()
 		
-@app.route('/about.html', methods=['GET'])
+@app.route('/about.htm', methods=['GET'])
 def aboutGET():
-	with open(cwd+'about.html','rt') as f:
+	with open(cwd+'about.htm','rt') as f:
 		return f.read()
 
 if __name__ == '__main__':

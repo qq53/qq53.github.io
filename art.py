@@ -51,7 +51,7 @@ def loadArt(fn):
 def scan(path):
 	files = os.listdir(path+'arts\\')
 	files = sorted(files,reverse=True)
-	
+
 	now = ''
 	lt = []
 	for f in files:
@@ -76,6 +76,8 @@ def code_trans(nd):
 	fix = 0
 	code_fix = 0
 
+	print(json.dumps(nd,indent=2))
+	
 	for i in range(len(nd)):
 		if nd[i] == '':
 			fix += 1
@@ -93,6 +95,7 @@ def code_trans(nd):
 				m = re.findall(r'^```(\w+)?\s*', nd[i])	
 				nd[i] = ''
 				if len(m) > 0:
+					print(i,fix,code_fix)
 					append_arr.append( {'l':i-fix-code_fix,'tag':'class="lang-'+m[0]+'"'} )
 				code_fix += 1
 				
