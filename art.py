@@ -75,8 +75,6 @@ def code_trans(nd):
 	flag = False
 	fix = 0
 	code_fix = 0
-
-	print(json.dumps(nd,indent=2))
 	
 	for i in range(len(nd)):
 		if nd[i] == '':
@@ -95,7 +93,6 @@ def code_trans(nd):
 				m = re.findall(r'^```(\w+)?\s*', nd[i])	
 				nd[i] = ''
 				if len(m) > 0:
-					print(i,fix,code_fix)
 					append_arr.append( {'l':i-fix-code_fix,'tag':'class="lang-'+m[0]+'"'} )
 				code_fix += 1
 				
@@ -125,7 +122,7 @@ def after_mark(d):
 	#print(json.dumps(nd,indent=2))
 	for di in append_arr:
 		sou = nd[di['l']]
-		s = re.findall(r'<[^/<>]+', sou)[0]
+		s = re.findall(r'<[^/<> ]+', sou)[0]
 		spos = sou.find(s)
 		epos = spos + len(s)
 		sou = sou[spos:epos] + ' ' + di['tag'] + sou[epos:]
