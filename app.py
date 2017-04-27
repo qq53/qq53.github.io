@@ -42,7 +42,7 @@ def editPOST():
 	fn = cwd + 'arts/' + request.form['k'] + '.json'
 	if writeArt(d, file_path=fn) == True:
 		make()
-		return '<script>alert("edit ok");location.href="/";</script>'
+		return '<script>alert("edit ok");</script>'
 	else:
 		return 'edit failed'
 

@@ -36,7 +36,7 @@
 </head>
 <body>
 
-	<form id="form" method="post" action="/edit">
+	<form id="form">
 		<div class="am-input-group">
 		  <span class="am-input-group-label title-icon"><i class="am-icon-file-o am-icon-fw"></i></span>
 		  <input type="text" id="title" class="am-form-field title" placeholder="标题" name="title"
@@ -54,7 +54,7 @@
 			<div id="output" class="preview-text">
 			</div>
 		</div>
-		<input type="submit" value="保存" class="am-btn am-btn-default" id="export"></input>
+		<input type="button" value="保存" class="am-btn am-btn-default" id="export"></input>
 		<input name="k" style="display:none;" value="{{ key }}"></input>
 	</form>
 	
@@ -75,6 +75,19 @@
 			$("#output").height( $('#textarea').height()-21 );		
 		});
 		new Editor($("#input")[0], $("#output")[0]);
+
+		$('#export').click(function(){
+			$.ajax({
+				cache: true,
+				type: "POST",
+				url: "/edit",
+				data: $('#form').serialize(),
+				async: false,
+				success: function(){
+					alert('edit ok!');
+				}
+			});
+		});
 	});
 </script>
 </body>
