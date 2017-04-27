@@ -72,24 +72,24 @@ def scan(path):
 append_arr = []
 	
 def code_trans(nd):
-	flag = False
 	fix = 0
 	code_fix = 0
+	in_code_block = False
 	
 	for i in range(len(nd)):
 		if nd[i] == '':
 			fix += 1
 			continue
-		if flag:
+		if in_code_block:
 			if re.match(r'^```\s*', nd[i]):
-				flag = False
+				in_code_block = False
 				continue
 			nd[i] = '\t' + nd[i]
 		else:
 			#head
 			#if len(m) > 0:
 			if nd[i][:3] == '```':
-				flag = True
+				in_code_block = True
 				m = re.findall(r'^```(\w+)?\s*', nd[i])	
 				nd[i] = ''
 				if len(m) > 0:
@@ -103,6 +103,7 @@ def before_mark(d):
 	nd = code_trans(nd)
 	fix = 0
 	code_fix = 0
+
 	#print(json.dumps(nd,indent=2))
 	for i in range(len(nd)):
 		if nd[i] == '```':
@@ -113,7 +114,7 @@ def before_mark(d):
 			continue
 		m = re.match(r'^{(.+)}(.+)$', nd[i])
 		if m:
-			nd[i] = m.group(2)	
+			nd[i] = m.group(2)
 			append_arr.append( {'l':i-fix+code_fix,'tag':m.group(1)} )
 	return '\r\n'.join(nd)
 	
