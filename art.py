@@ -121,13 +121,16 @@ def before_mark(d):
 def after_mark(d):
 	nd = d.split('\n')
 	#print(json.dumps(nd,indent=2))
+	print(append_arr,len(nd))
 	for di in append_arr:
 		sou = nd[di['l']]
+		print(sou)
 		s = re.findall(r'<[^/<> ]+', sou)[0]
 		spos = sou.find(s)
 		epos = spos + len(s)
 		sou = sou[spos:epos] + ' ' + di['tag'] + sou[epos:]
 		nd[di['l']] = sou
+		print(sou)
 	return '\n'.join(nd)
 	
 def show_art(fn):

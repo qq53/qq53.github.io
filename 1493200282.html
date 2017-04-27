@@ -249,6 +249,12 @@ CButton::vtable = 0x0325d988
             spray[i] = onemeg.substr(0, onemeg.length);
         }
 </code></pre>
+<p>64KB * 16 = 1MB * 400 = 400MB = 0x19000000覆盖到了0x70700024地址
+大块按1MB对齐，小块按64KB对齐</p>
+<p>其中38的含义是<br/>
+header = 0x20<br/>
+stringlen = 0x4<br/>
+unicodenull = 0x2</p>
 			</div>
 		</div>
 	</div>
