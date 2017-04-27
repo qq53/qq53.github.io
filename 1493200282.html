@@ -1,0 +1,120 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>CVE-2012-1876分析 - Vap0r's Blog</title>
+
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <link rel="icon" type="image/png" href="static/i/favicon.png">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" sizes="192x192" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <link rel="apple-touch-icon-precomposed" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="static/i/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">
+
+  <link rel="stylesheet" href="static/css/amazeui.min.css">
+  <link rel="stylesheet" href="static/css/header.css">
+  <link rel="stylesheet" href="static/css/footer.css">
+  <link rel="stylesheet" href="static/css/single.css">
+  <link rel="stylesheet" href="static/css/sidebar.css">
+  <link rel="stylesheet" href="static/css/railscasts.min.css">
+</head>
+<body>
+
+<!--在这里编写你的代码-->
+
+<div id="header">
+	<a href="/">Vap0r's Blog</a>
+</div>
+
+<div class="am-g body">
+	<div class="am-u-sm-7 am-u-sm-offset-3">
+		<div id="menu" data-am-scrollspy-nav data-am-sticky>
+	<a href="/">Home</a>
+	<a href="about.html">About</a>
+</div>
+		
+		<div id="article">
+			<div class="tags-icon am-icon-tag" id="tags">
+				
+					<span href="#">Exploit</span> 
+				
+					<span href="#">HeapOverFlow</span> 
+				
+				<span id="date">2017/04/26</span>
+			</div>		
+			<div id="title">CVE-2012-1876分析</div>
+			<div id="content">
+				<h1>环境</h1>
+<p>受影响软件： Microsoft Internet Explorer 6 through 9, and 10 Consumer Preview<br />
+调试环境: XP SP3中文版 + Internet Explorer 8.0.6001.18702</p>
+<h1>要点记要</h1>
+<p>常规分析内容就不写了，网上有很多分析文章，这里主要记录分析要点</p>
+<h3>1.  申请字符串-6</h3>
+<pre class="lang-html"><code>            // E
+            rra[i] = dap.substring(0, (0x100-6)/2);
+</code></pre>
+<p><img alt="string" src="data/cve-2012-1876/str.png">
+可以看到字符串长度和结束字符共占6个字节</p>
+<h3>2. 为什么要appendChild</h3>
+<pre class="lang-html"><code>            // B
+            var obj = document.createElement("button");
+            div_container.appendChild(obj);
+</code></pre>
+<p>通过对ntdll!RtlAllocateHeap下断，可以观察JS分配情况</p>
+<pre class="lang-c"><code>alloc heap: 58 addr: 230740
+alloc heap: 14 addr: 30b1700
+alloc heap: 40 addr: 30b0330
+alloc heap: 20 addr: 31e1960
+alloc heap: 4c addr: 1f1860
+alloc heap: 50 addr: 1f1128
+alloc heap: fc addr: 325d568
+alloc heap: 28 addr: 1494c8
+
+alloc heap: 100 addr: 325d670
+alloc heap: 100 addr: 325d778
+alloc heap: 100 addr: 325d880
+</code></pre>
+<p>这里引用<a href="https://kbandla.github.io/posts/2014/Jun/20/Internet%20Explorer%20Isolated%20Heap.html">《Internet Explorer Isolated Heap》</a>，可以看到
+CButton 58h，上面我的日志也看到申请58大小空间是无法和3次申请100大小空间连续起来，在申请58到后续申请100大小间还有7次alloc,其中当大小是fc时，跟申请100大小空间的地址是连续的，而申请fc大小正是由于appendChild所影响的</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="footer">
+	<p>&copy;2015-2017 Vap0r's Blog.</p>
+</div>
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="static/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<script src="static/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="static/js/amazeui.min.js"></script>
+<script src="static/js/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+</body>
+</html>

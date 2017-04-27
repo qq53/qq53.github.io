@@ -48,7 +48,7 @@ def editPOST():
 
 @app.route('/write', methods=['GET'])
 def writeGET():
-	with open(cwd+'write.html','rt') as f:
+	with open(cwd+'write.htm','rt') as f:
 		return f.read()
 
 @app.route('/write', methods=['POST'])
