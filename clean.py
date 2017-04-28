@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# author: vap0r
-# github: github.com/qq53
+# coding: utf8
+# author: c00c
 
 import os
 

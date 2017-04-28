@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf8
-# author: vap0r
-# github: github.com/qq53
+# author: c00c
 
 from markdown import markdown
 import json
@@ -68,83 +67,57 @@ def scan(path):
 			d['year'] = now
 		lt.append(d)
 	return lt
-	
-append_arr = []
-	
-def code_trans(nd):
-	fix = 0
-	code_fix = 0
-	in_code_block = False
-	
-	for i in range(len(nd)):
-		if nd[i] == '':
-			fix += 1
-			continue
-		if in_code_block:
-			if re.match(r'^```\s*', nd[i]):
-				in_code_block = False
-				continue
-			nd[i] = '\t' + nd[i]
-		else:
-			#head
-			#if len(m) > 0:
-			if nd[i][:3] == '```':
-				in_code_block = True
-				m = re.findall(r'^```(\w+)?\s*', nd[i])	
-				nd[i] = ''
-				if len(m) > 0:
-					append_arr.append( {'l':i-fix-code_fix,'tag':'class="lang-'+m[0]+'"'} )
-				code_fix += 1
-				
-	return nd
 
-def before_mark(d):
+def add_attr(str, attr):
+	s = re.search(r'(<[^/<> ]+)', str).group(1)
+	spos = str.find(s)
+	epos = spos + len(s)
+	return str[:epos] + ' ' + attr + str[epos:]
+	
+def parse(d):
 	nd = d.split('\r\n')
-	nd = code_trans(nd)
-	fix = 0
-	code_fix = 0
-
-	#print(json.dumps(nd,indent=2))
-	for i in range(len(nd)):
-		if nd[i] == '```':
-			nd[i] = ''
-			code_fix += 1
-		if nd[i] == '':
-			fix += 1
-			continue
-		m = re.match(r'^{(.+)}(.+)$', nd[i])
-		if m:
-			nd[i] = m.group(2)
-			append_arr.append( {'l':i-fix+code_fix,'tag':m.group(1)} )
-	return '\r\n'.join(nd)
 	
-def after_mark(d):
-	nd = d.split('\n')
-	#print(json.dumps(nd,indent=2))
-	print(append_arr,len(nd))
-	for di in append_arr:
-		sou = nd[di['l']]
-		print(sou)
-		s = re.findall(r'<[^/<> ]+', sou)[0]
-		spos = sou.find(s)
-		epos = spos + len(s)
-		sou = sou[spos:epos] + ' ' + di['tag'] + sou[epos:]
-		nd[di['l']] = sou
-		print(sou)
-	return '\n'.join(nd)
+	code_block = False
+	result = ''
+	codes = []
+
+	for l in nd:
+		if l == '':
+			continue
+		
+		if l[:3] == '```':
+			code_block ^= True
+			if code_block:
+				lang = 'c'
+				m = re.match(r'```(\w+)\s*', l)
+				if m:
+					lang = m.group(1)
+				continue
+			else:
+				tmp = markdown('\r\n'.join(codes), output_format='HTML5').split('\n')
+				tmp[0] = add_attr(tmp[0],'class="lang-'+lang+'"')
+				result += '\r\n'.join(tmp)
+				codes.clear()
+				continue
+		if code_block:
+			codes.append('\t'+l)
+			continue
+
+		m = re.match(r'^{(.+)}(.+)$', l)
+		if m:
+			result += add_attr(markdown(m.group(2), output_format='HTML5'), m.group(1)) + '\r\n'
+			continue
+			
+		result += markdown(l, output_format='HTML5') + '\r\n'
+			
+	#print(json.dumps(result.split('\r\n'),indent=2))
+	return result
 	
 def show_art(fn):
-	try:
-		with open(fn, 'rt') as f:
-			data = f.read()
-			d = json.loads(data)
-			if checkArtData(d) == False:
-				return None
-			global append_arr
-			append_arr = []
-			d['content'] = before_mark(d['content'])
-			d['markdown'] = markdown(d['content'], output_format='HTML5')
-			d['markdown'] = after_mark(d['markdown'])
-			return d
-	except:
-		print('read file ' + fn + ' error')
+	with open(fn, 'rt') as f:
+		data = f.read()
+		d = json.loads(data)
+		if checkArtData(d) == False:
+			return None
+		d['markdown'] = parse(d['content'])
+		return d

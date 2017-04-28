@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>INTEL手册VT 25章记录 - Vap0r's Blog</title>
+  <title>INTEL手册VT 25章记录 - c00c's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -43,7 +43,7 @@
 <!--在这里编写你的代码-->
 
 <div id="header">
-	<a href="/">Vap0r's Blog</a>
+	<a href="/">c00c's Blog</a>
 </div>
 
 <div class="am-g body">
@@ -65,53 +65,94 @@
 				<h1>VMCSs</h1>
 <ul>
 <li>VMPTRLD 激活并成为当前的VMCS</li>
+</ul>
+<ul>
 <li>VMCS link指针域</li>
+</ul>
+<ul>
 <li>VMCLEAR反之</li>
+</ul>
+<ul>
 <li>VMPTRST 存储VMCS到地址，如果没有当前VMCS，则值为FFFFFFFF_FFFFFFFFH</li>
 </ul>
 <p>VMCS启动状态DFA如下</p>
 <p><img alt="img" src="static\imgs\20161206002120.png"></p>
-<p class="lang-c">其中没有说明所有SHADOW VMCS转换成活跃的方式</p>
+<p>其中没有说明所有SHADOW VMCS转换成活跃的方式</p>
 <h3>VMCS域格式</h3>
-<pre><code>Byte Offset          Contents  
+<pre class="lang-c"><code>Byte Offset          Contents  
 0                    Bits 30:0: VMCS revision identifier  
                      Bit 31: shadow-VMCS indicator
 4                    VMX-abort indicator  
 8                    VMCS data
-</code></pre>
-<h5>VMCS DATA</h5>
+</code></pre><h5>VMCS DATA</h5>
 <ul>
-<li>Guest-state area. Processor state is saved into the guest-state area on VM exits and loaded from there on
-VM entries.</li>
-<li>Host-state area. Processor state is loaded from the host-state area on VM exits.</li>
-<li>VM-execution control fields. These fields control processor behavior in VMX non-root operation. They
-determine in part the causes of VM exits.</li>
-<li>VM-exit control fields. These fields control VM exits.</li>
-<li>VM-entry control fields. These fields control VM entries.</li>
-<li>VM-exit information fields. These fields receive information on VM exits and describe the cause and the
-nature of VM exits. On some processors, these fields are read-only.</li>
+<li>Guest-state area. Processor state is saved into the guest-state area on VM exits and loaded from there on</li>
 </ul>
+<p>VM entries.</p>
+<ul>
+<li>Host-state area. Processor state is loaded from the host-state area on VM exits.</li>
+</ul>
+<ul>
+<li>VM-execution control fields. These fields control processor behavior in VMX non-root operation. They</li>
+</ul>
+<p>determine in part the causes of VM exits.</p>
+<ul>
+<li>VM-exit control fields. These fields control VM exits.</li>
+</ul>
+<ul>
+<li>VM-entry control fields. These fields control VM entries.</li>
+</ul>
+<ul>
+<li>VM-exit information fields. These fields receive information on VM exits and describe the cause and the</li>
+</ul>
+<p>nature of VM exits. On some processors, these fields are read-only.</p>
 <h5>Basic VM-Exit Information</h5>
 <p>The 31 Bit Position of VM Exit reason is indicate VM-entry failure</p>
 <h5>VMCS使用要点</h5>
 <ul>
 <li>VMCS不应该在多个逻辑处理器上设置为活动状态。从一个逻辑处理器迁移到另一个应该对此VMCS执行VMCLEAR指令</li>
+</ul>
+<ul>
 <li>不要更改活动状态VMCS的shadow-VMCS 标志</li>
+</ul>
+<ul>
 <li>修改VMCS使用VMREAD和VMWRITE，不要直接读写内存(在执行VMPTRLD前删除所有VMCS的线性地址映射，在VMCLEAR前不要重映射)</li>
+</ul>
+<ul>
 <li>VMXOFF或者失去电源逻辑处理器之前使用VMCLEAR</li>
+</ul>
+<ul>
 <li>初始化VMCS应该首先调用VMCLEAR</li>
+</ul>
+<ul>
 <li>修改VMCS应该确保没有VMX non-root操作会用到其中的数据</li>
+</ul>
+<ul>
 <li>VMXON指令操作数必须4K对齐，执行VMXON后，不应在VMXOFF前修改此区域</li>
 </ul>
 <h1>相关错误优先级</h1>
-<p>以下操作会产生异常而非VM EXIT：
--  特权等级错误指令、TSS中I/O权限位错误。例如R3调用RDMSR，不会产生VM EXIT
--  当特定指令操作数优先于VM EXIT，例如LWSW
--  unconditional I/O或者I/O bitmaps控制位比以下优先级高：
-  -  通用保护错误，INS用ES段，OUTS用DS段（除非使用指令修饰符）
-  -  通用保护错误，超过段描述符偏移限制
-  -  对齐检查错误
-- 除去以上的VM EXITS比异常错误优先级高</p>
+<p>以下操作会产生异常而非VM EXIT：</p>
+<ul>
+<li>特权等级错误指令、TSS中I/O权限位错误。例如R3调用RDMSR，不会产生VM EXIT</li>
+</ul>
+<ul>
+<li>当特定指令操作数优先于VM EXIT，例如LWSW</li>
+</ul>
+<ul>
+<li>unconditional I/O或者I/O bitmaps控制位比以下优先级高：</li>
+</ul>
+<ul>
+<li>通用保护错误，INS用ES段，OUTS用DS段（除非使用指令修饰符）</li>
+</ul>
+<ul>
+<li>通用保护错误，超过段描述符偏移限制</li>
+</ul>
+<ul>
+<li>对齐检查错误</li>
+</ul>
+<ul>
+<li>除去以上的VM EXITS比异常错误优先级高</li>
+</ul>
 <h1>无条件VM EXITS指令</h1>
 <p>CPUID GETSEC INVD XSETBV INVEPT INVVPID VMCALL VMCLEAR VMLAUNCH VMPTRLD VMPTRST VMRESUME VMXOFF VMXON</p>
 <h1>有条件VM EXITS指令</h1>
@@ -119,20 +160,40 @@ nature of VM exits. On some processors, these fields are read-only.</li>
 <h1>其他导致VM EXITS 原因</h1>
 <ul>
 <li>异常（错误、陷阱、终止）基于exception bitmap，包括INT3 INTO BOUND UD2指令</li>
+</ul>
+<ul>
 <li>Triple错误</li>
+</ul>
+<ul>
 <li>外部中断</li>
+</ul>
+<ul>
 <li>NMIs</li>
+</ul>
+<ul>
 <li>INIT信号</li>
+</ul>
+<ul>
 <li>Start-up IPIs</li>
+</ul>
+<ul>
 <li>任务切换</li>
+</ul>
+<ul>
 <li>SMIs</li>
+</ul>
+<ul>
 <li>VMX-preemption timer</li>
+</ul>
+<ul>
 <li>interrupt-window exiting标志位</li>
+</ul>
+<ul>
 <li>NMI-windows exiting标志位</li>
 </ul>
 <h1>VMX non-root变化的指令</h1>
-<p>CLTS INVPCID IRET LWSW MOV XX,CR0 MOV XX,CR3 MOV XX,CR4 MOV XX,CR8 MOV CR0,XX MOV CR3,XX
-MOV CR4,XX MOV CR8,XX NWAIT RDMSR RDPID RDTSC RDTSCP SWSW WRMSR XRSTORS XSAVES</p>
+<p>CLTS INVPCID IRET LWSW MOV XX,CR0 MOV XX,CR3 MOV XX,CR4 MOV XX,CR8 MOV CR0,XX MOV CR3,XX</p>
+<p>MOV CR4,XX MOV CR8,XX NWAIT RDMSR RDPID RDTSC RDTSCP SWSW WRMSR XRSTORS XSAVES</p>
 <h1>其他VMX non-root变化</h1>
 <ul>
 <li>external-interrupt exiting标志置位，影响RFLAGS.IF、STI、MOV SS、NMIs行为</li>
@@ -140,20 +201,29 @@ MOV CR4,XX MOV CR8,XX NWAIT RDMSR RDPID RDTSC RDTSCP SWSW WRMSR XRSTORS XSAVES</
 <h1>VMX non-root特殊特性</h1>
 <ul>
 <li>VMX-preemption timer </li>
+</ul>
+<ul>
 <li>monitor trap flag</li>
+</ul>
+<ul>
 <li>翻译客户物理地址</li>
+</ul>
+<ul>
 <li>VM函数</li>
+</ul>
+<ul>
 <li>虚拟化异常</li>
 </ul>
 <h1>无限制客户机</h1>
 <p>第二个之后的处理器支持在非分页保护模式下运行</p>
+
 			</div>
 		</div>
 	</div>
 </div>
 
 <div id="footer">
-	<p>&copy;2015-2017 Vap0r's Blog.</p>
+	<p>&copy;2015-2017 c00c's Blog.</p>
 </div>
 
 <!--[if (gte IE 9)|!(IE)]><!-->

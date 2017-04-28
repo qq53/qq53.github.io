@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>CVE-2010-2883分析 - Vap0r's Blog</title>
+  <title>CVE-2010-2883分析 - c00c's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -43,7 +43,7 @@
 <!--在这里编写你的代码-->
 
 <div id="header">
-	<a href="/">Vap0r's Blog</a>
+	<a href="/">c00c's Blog</a>
 </div>
 
 <div class="am-g body">
@@ -87,26 +87,21 @@ if ( TableEntry )
   }
   v23 = 1;
 }
-</code></pre>
-<p>可以看到在解析SING表，后经过一些条件就会执行到strcat。由于除了ATL.DLL其他模块均开启了SAFESEH，而ATL.DLL中我没找到好用的gadget，所以利用SEH控制程序很难？（我的猜测）</p>
+</code></pre><p>可以看到在解析SING表，后经过一些条件就会执行到strcat。由于除了ATL.DLL其他模块均开启了SAFESEH，而ATL.DLL中我没找到好用的gadget，所以利用SEH控制程序很难？（我的猜测）</p>
 <p>sub_8001243会对我们覆盖的栈中一个地址addr+0x1c进行读写，此时</p>
 <pre class="lang-c"><code>uniqueName   = 12e4d8
 a2 = 12e608  = uniqueName + 0x130 = sing + 0x140
-</code></pre>
-<p>对应POC代码</p>
+</code></pre><p>对应POC代码</p>
 <pre class="lang-ruby"><code># 0xffffffff gets written here @ 0x7001400 (in BIB.dll)
 sing[0x140, 4] = [0x4a8a08e2 - 0x1c].pack('V')
-</code></pre>
-<p>随后调用</p>
+</code></pre><p>随后调用</p>
 <pre class="lang-x86asm"><code>sub_8016B96 -&gt; sub_801BAD9 -&gt; call dword ptr [eax]
-</code></pre>
-<p>此时 eax = 12e6e0 = sing + 0x240</p>
+</code></pre><p>此时 eax = 12e6e0 = sing + 0x240</p>
 <p>对应POC</p>
 <pre class="lang-ruby"><code># This becomes our new EIP (puts esp to stack buffer)
 ret = 0x4a80cb38 # add ebp, 0x794 / leave / ret
 sing[0x208, 4] = [ret].pack('V')
-</code></pre>
-<p>剩下的构造SING表POC就很好理解了，其中设置ESP指向0x0c0c0c0c（PDF中JS负责完成堆喷）</p>
+</code></pre><p>剩下的构造SING表POC就很好理解了，其中设置ESP指向0x0c0c0c0c（PDF中JS负责完成堆喷）</p>
 <p style="color:#888;">比较好奇的是POC中这段代码，在我测试中没发现有什么用处？？</p>
 <pre class="lang-ruby"><code># Without the following, sub_801ba57 returns 0.
 sing[0x24c, 4] = [0x6c].pack('V')
@@ -117,7 +112,7 @@ sing[0x24c, 4] = [0x6c].pack('V')
 </div>
 
 <div id="footer">
-	<p>&copy;2015-2017 Vap0r's Blog.</p>
+	<p>&copy;2015-2017 c00c's Blog.</p>
 </div>
 
 <!--[if (gte IE 9)|!(IE)]><!-->

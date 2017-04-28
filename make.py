@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# coding=utf-8
-# author: vap0r
-# github: github.com/qq53
+# coding: utf8
+# author: c00c
 
 from jinja2 import Environment, FileSystemLoader
 import os, codecs
@@ -16,7 +15,7 @@ def make():
 	template_index = env.get_template('index.html')
 	template_single = env.get_template('single.html')
 
-	u = 'http://blog.vap0r.cn'
+	u = 'c00c.cc'
 
 	arts_list = scan(cwd)
 

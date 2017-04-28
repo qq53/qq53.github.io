@@ -7,7 +7,7 @@
   <meta name="keywords" content="">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>INTEL手册VT 26章记录 - Vap0r's Blog</title>
+  <title>INTEL手册VT 26章记录 - c00c's Blog</title>
 
   <!-- Set render engine for 360 browser -->
   <meta name="renderer" content="webkit">
@@ -43,7 +43,7 @@
 <!--在这里编写你的代码-->
 
 <div id="header">
-	<a href="/">Vap0r's Blog</a>
+	<a href="/">c00c's Blog</a>
 </div>
 
 <div class="am-g body">
@@ -65,34 +65,64 @@
 				<h3>进入VM会执行以下几步：</h3>
 <ol>
 <li>基础检查确保可以进入VM</li>
-<li>host-state域检查确保VMX non-root操作，VMCS正确设置以支持下次VM exit</li>
-<li>以下会并行或者任意顺序</li>
-<li>进入VM后，检查guest-state域，保证与IA-32和64架构一致</li>
-<li>处理器状态来自guest-state域基于VMCS控制</li>
-<li>Address-range monitoring清除</li>
-<li>MSRs从MSR-load域加载</li>
-<li>如果VMLAUNCH执行，VMCS状态被置为lanunched</li>
-<li>一个事件注入到客户机上下文</li>
 </ol>
+<ul>
+<li>host-state域检查确保VMX non-root操作，VMCS正确设置以支持下次VM exit</li>
+</ul>
+<ul>
+<li>以下会并行或者任意顺序</li>
+</ul>
+<ul>
+<li>进入VM后，检查guest-state域，保证与IA-32和64架构一致</li>
+</ul>
+<ul>
+<li>处理器状态来自guest-state域基于VMCS控制</li>
+</ul>
+<ul>
+<li>Address-range monitoring清除</li>
+</ul>
+<ul>
+<li>MSRs从MSR-load域加载</li>
+</ul>
+<ul>
+<li>如果VMLAUNCH执行，VMCS状态被置为lanunched</li>
+</ul>
+<ul>
+<li>一个事件注入到客户机上下文</li>
+</ul>
 <p>（1-4检查可能会造成进入VM失败）</p>
 <h3>加载客户机状态</h3>
 <ul>
 <li>一些状态从guest-state域读入</li>
+</ul>
+<ul>
 <li>一些状态取决于VM-entry controls域</li>
+</ul>
+<ul>
 <li>页目录指针从特定的CR寄存器读入</li>
 </ul>
 <p>（载入和检查VMCS乱序执行）</p>
 <h3>加载客户机CR、DR、MSRs寄存器</h3>
 <ul>
 <li>CR0从CR0域加载，但是以下几个位永远不会受VM entry影响：4 15:6 17 28:19 29 30</li>
+</ul>
+<ul>
 <li>CR3 CR4分别从对应的域中加载</li>
+</ul>
+<ul>
 <li>DR7受相关控制位影响</li>
+</ul>
+<ul>
 <li>IA32_SYSENTER寄存器从对应域加载，其他MSRs受相应控制位影响</li>
+</ul>
+<ul>
 <li>SMBASE寄存器不收VM entries影响，除了从SMM返回外</li>
 </ul>
 <h3>加载客户机SR段寄存器和DT寄存器</h3>
 <ul>
 <li>CS, SS, DS, ES, FS, GS, TR, LDTR从对应域加载</li>
+</ul>
+<ul>
 <li>GDTR IDTR用base和limit域加载</li>
 </ul>
 <h3>加载客户机RIP RSP RFLAGS</h3>
@@ -100,9 +130,13 @@
 <h3>加载页目录指针表项</h3>
 <p>如果开启了PAE，进入VM通过PAE分页内部加载PDPTEs，其他寄存器受相应控制位，如EPT控制位</p>
 <h3>更新客户机寄存器状态</h3>
-<p>进入VM根据以下来使缓存映射无效：
- - VPID控制位为0时，通过VPID来无效EP4TA值（EPTP寄存器51:12位,EPT页表指针寄存器）
- - 控制位为1时，不会无效映射</p>
+<p>进入VM根据以下来使缓存映射无效：</p>
+<ul>
+<li>VPID控制位为0时，通过VPID来无效EP4TA值（EPTP寄存器51:12位,EPT页表指针寄存器）</li>
+</ul>
+<ul>
+<li>控制位为1时，不会无效映射</li>
+</ul>
 <h3>清除Address-Range Monitoring</h3>
 <p>进入VM清除所有Address-Range Monitoring</p>
 <h3>加载MSRS</h3>
@@ -111,13 +145,14 @@
 <p>当interruption-information域被置位，会根据中断类型分别处理</p>
 <h3>定向事件注入</h3>
 <p>在客户机在家完后，通过指定一个IDT向量完成事件注入。如果在此过程中发生嵌套异常，行为取决于exception bitmap</p>
+
 			</div>
 		</div>
 	</div>
 </div>
 
 <div id="footer">
-	<p>&copy;2015-2017 Vap0r's Blog.</p>
+	<p>&copy;2015-2017 c00c's Blog.</p>
 </div>
 
 <!--[if (gte IE 9)|!(IE)]><!-->

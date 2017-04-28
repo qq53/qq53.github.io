@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# coding=utf-8
-# author: vap0r
-# github: github.com/qq53
+# coding: utf8
+# author: c00c
 
 from flask import Flask, request
 import time, json, codecs
@@ -35,9 +34,9 @@ def editGET():
 @app.route('/edit', methods=['POST'])
 def editPOST():
 	d = {
-	'title': request.form['title'],
-	'tags': request.form['tags'],
-	'content': request.form['input']
+		'title': request.form['title'],
+		'tags': request.form['tags'],
+		'content': request.form['input']
 	}
 	fn = cwd + 'arts/' + request.form['k'] + '.json'
 	if writeArt(d, file_path=fn) == True:
@@ -54,9 +53,9 @@ def writeGET():
 @app.route('/write', methods=['POST'])
 def writePOST():
 	d = {
-	'title': request.form['title'],
-	'tags': request.form['tags'],
-	'content': request.form['input']
+		'title': request.form['title'],
+		'tags': request.form['tags'],
+		'content': request.form['input']
 	}
 	t = str(int(time.time()))
 	if writeArt(d, file_path = cwd+'/arts/'+t+'.json'):
