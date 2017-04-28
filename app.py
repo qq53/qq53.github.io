@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# coding: utf8
+# coding: utf-8
 # author: c00c
 
 from flask import Flask, request
