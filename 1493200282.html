@@ -236,6 +236,49 @@ CButton::vtable = 0x0325d988
 <pre class="lang-python"><code>header = 0x20
 stringlen = 0x4
 unicodenull = 0x2
+</code></pre><p>可以通过Windbg来观察堆</p>
+<pre class="lang-c"><code>1:023&gt; !heap -flt s fffe0
+    _HEAP @ 140000
+      HEAP_ENTRY Size Prev Flags    UserPtr UserSize - state
+        03f50018 1fffc 0000  [0b]   03f50020    fffe0 - (busy VirtualAlloc)
+        04060018 1fffc fffc  [0b]   04060020    fffe0 - (busy VirtualAlloc)
+
+1:023&gt; !heap -v 140000
+Index   Address  Name      Debugging options enabled
+  1:   00140000 
+    Segment at 00140000 to 00240000 (00100000 bytes committed)
+    Segment at 02ce0000 to 02de0000 (00100000 bytes committed)
+    Segment at 03190000 to 03390000 (001b6000 bytes committed)
+    Segment at 03b50000 to 03f50000 (00048000 bytes committed)
+    Flags:                00000002
+    ForceFlags:           00000000
+    Granularity:          8 bytes
+    Segment Reserve:      00800000
+    Segment Commit:       00002000
+    DeCommit Block Thres: 00000800
+    DeCommit Total Thres: 00002000
+    Total Free Size:      00000f96
+    Max. Allocation Size: 7ffdefff
+    Lock Variable at:     00140608
+    Next TagIndex:        0000
+    Maximum TagIndex:     0000
+    Tag Entries:          00000000
+    PsuedoTag Entries:    00000000
+    Virtual Alloc List:   00140050
+
+1:023&gt; dt _LIST_ENTRY 00140050
+ntdll!_LIST_ENTRY
+ [ 0x3f50000 - 0x1ea50000 ]
+   +0x000 Flink            : 0x03f50000 _LIST_ENTRY [ 0x4060000 - 0x140050 ]
+   +0x004 Blink            : 0x1ea50000 _LIST_ENTRY [ 0x140050 - 0x1e940000 ]
+
+1:023&gt; dd 0x03f50000
+03f50000  04060000 00140050 00000000 00000000
+03f50010  00101000 00101000 00001020 00000b00
+03f50020  000fffda 63581031 6358129a 6358129a
+
+1:023&gt; ? fffda + 4 + 2
+Evaluate expression: 1048544 = 000fffe0
 </code></pre>
 			</div>
 		</div>
