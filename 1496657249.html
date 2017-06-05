@@ -1,0 +1,128 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>CVE-2012-3569分析 - c00c's Blog</title>
+
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <link rel="icon" type="image/png" href="static/i/favicon.png">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" sizes="192x192" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <link rel="apple-touch-icon-precomposed" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="static/i/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">
+
+  <link rel="stylesheet" href="static/css/amazeui.min.css">
+  <link rel="stylesheet" href="static/css/header.css">
+  <link rel="stylesheet" href="static/css/footer.css">
+  <link rel="stylesheet" href="static/css/single.css">
+  <link rel="stylesheet" href="static/css/sidebar.css">
+  <link rel="stylesheet" href="static/css/railscasts.min.css">
+</head>
+<body>
+
+<!--在这里编写你的代码-->
+
+<div id="header">
+	<a href="/">c00c's Blog</a>
+</div>
+
+<div class="am-g body">
+	<div class="am-u-sm-7 am-u-sm-offset-3">
+		<div id="menu" data-am-scrollspy-nav data-am-sticky>
+	<a href="/">Home</a>
+	<a href="about.html">About</a>
+</div>
+		
+		<div id="article">
+			<div class="tags-icon am-icon-tag" id="tags">
+				
+					<span href="#">Exploit</span> 
+				
+					<span href="#">FormatString</span> 
+				
+				<span id="date">2017/06/05</span>
+			</div>		
+			<div id="title">CVE-2012-3569分析</div>
+			<div id="content">
+				<h2>0x00.环境</h2>
+<p>系统:：WINXP SP3</p>
+<p>影响软件：VMware-ovftool-2.1.0-467744-win-i386</p>
+<h2>0x01.成因</h2>
+<p>未过滤格式化字符串，导致%n写入栈上关键数据</p>
+<h2>0x02.要点</h2>
+<h5>1.如何定位关键点？</h5>
+<p>从崩溃点开始不好分析，栈也被破坏了，利用windbg x命令很好定位，如下</p>
+<pre class="lang-c"><code>0:000&gt; x *!*basic_ostream*operator&lt;&lt;*
+7848e3fd MSVCP90!std::basic_ostream&lt;char,std::char_traits&lt;char&gt; &gt;::operator&lt;&lt; (&lt;no parameter info&gt;)
+7848e3fd MSVCP90!std::basic_ostream&lt;char,std::char_traits&lt;char&gt; &gt;::operator&lt;&lt; (&lt;no parameter info&gt;)
+7848e3fd MSVCP90!std::basic_ostream&lt;unsigned short,std::char_traits&lt;unsigned short&gt; &gt;::operator&lt;&lt; (&lt;no parameter info&gt;)
+7848e3fd MSVCP90!std::basic_ostream&lt;wchar_t,std::char_traits&lt;wchar_t&gt; &gt;::operator&lt;&lt; (&lt;no parameter info&gt;)
+7848e3fd MSVCP90!std::basic_ostream&lt;unsigned short,std::char_traits&lt;unsigned short&gt; &gt;::operator&lt;&lt; (&lt;no parameter info&gt;)
+...
+</code></pre><p>全部下断，遇到刚开始经常断下的取消该断点，排除几次后找到关键输出函数7848e503，随即找到关键函数sub_47E7B0</p>
+<h5>2.怎么获得控制权的？</h5>
+<p>通过搜索字符，找到写入%hn的指针固定为ebp+50</p>
+<pre class="lang-c"><code>0:000&gt; dd ebp+50
+0012fc6c  00680592 00000004 0012ff50 004184f4
+0012fc7c  00cd5a38 02c9b9f8 5f49b106 016138e0
+0012fc8c  00000002 00000000 029946f0 00000000
+0012fc9c  00000100 0299482c 005ee3f6 00000000
+0012fcac  0000000f 5f49b2e2 02994400 01e50000
+0012fcbc  0299459c 005ee41e 00000000 0000000f
+0012fccc  00000003 72507000 636f746f 00006c6f
+0012fcdc  0012fcc4 00000000 0000000f 7c930040
+0:000&gt; k
+ChildEBP RetAddr  
+WARNING: Stack unwind information not available. Following frames may be wrong.
+0012fc1c 0045637e ovftool+0x7ea31
+0012fc74 004184f4 ovftool+0x5637e
+0012ff50 004186f4 ovftool+0x184f4
+0012ff7c 005e82ff ovftool+0x186f4
+0012ffc0 7c817067 ovftool+0x1e82ff
+0012fff0 00000000 kernel32!BaseProcessStart+0x23
+</code></pre><p>可以看到第四次ret时将获得控制权</p>
+<h5>3.如何利用？</h5>
+<p>通过增长数据，使地址可预测，使得第四次RET到ROP+SHELLCODE的地址，完成利用</p>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="footer">
+	<p>&copy;2015-2017 c00c's Blog.</p>
+</div>
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="static/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<script src="static/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="static/js/amazeui.min.js"></script>
+<script src="static/js/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
