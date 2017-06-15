@@ -86,7 +86,7 @@
             sobj.data.logs=exp;
         }
 </code></pre><p>因为超过这里的设置才会触发漏洞</p>
-<p><img alt="img" src="data\cve-2014-0502\flash-stroage.png"></p>
+<p><img alt="img" src="data\cve-2014-0502\flash-storage.png"></p>
 <p>依据是在进入ROP前，根据栈信息进行回溯，对第一个调用函数分析</p>
 <pre class="lang-c"><code>int __thiscall SharedObject_flush(int this, char a2, double a3, char a4)
 {

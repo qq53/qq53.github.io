@@ -82,6 +82,10 @@ def artGET(id):
 def aboutGET():
 	with open(cwd+'about.htm','rt') as f:
 		return f.read()
+		
+@app.route('/*.png', methods=['GET'])
+def pnfGET():
+	print('1231231231231')
 
 if __name__ == '__main__':
     app.run(port=80)
