@@ -1,0 +1,137 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>CVE-2015-0313分析 - c00c's Blog</title>
+
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <link rel="icon" type="image/png" href="static/i/favicon.png">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" sizes="192x192" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <link rel="apple-touch-icon-precomposed" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="static/i/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">
+
+  <link rel="stylesheet" href="static/css/amazeui.min.css">
+  <link rel="stylesheet" href="static/css/header.css">
+  <link rel="stylesheet" href="static/css/footer.css">
+  <link rel="stylesheet" href="static/css/single.css">
+  <link rel="stylesheet" href="static/css/sidebar.css">
+  <link rel="stylesheet" href="static/css/railscasts.min.css">
+</head>
+<body>
+
+<!--在这里编写你的代码-->
+
+<div id="header">
+	<a href="/">c00c's Blog</a>
+</div>
+
+<div class="am-g body">
+	<div class="am-u-sm-7 am-u-sm-offset-3">
+		<div id="menu" data-am-scrollspy-nav data-am-sticky>
+	<a href="/">Home</a>
+	<a href="about.html">About</a>
+</div>
+		
+		<div id="article">
+			<div class="tags-icon am-icon-tag" id="tags">
+				
+					<span href="#">Exploit</span> 
+				
+					<span href="#">UserAfterFree</span> 
+				
+				<span id="date">2017/07/14</span>
+			</div>		
+			<div id="title">CVE-2015-0313分析</div>
+			<div id="content">
+				<h2>0x00.环境</h2>
+<p>系统:：WIN7 X86 SP1</p>
+<p>影响软件：flash_player_16.0.0.296</p>
+<p>EXP: <a href="data/cve-2015-0313/main.as">main.as</a></p>
+<h2>0x01.成因</h2>
+<p>globalMemory中byteArray释放但还保留了指针，从而导致UAF</p>
+<h2>0x02.要点</h2>
+<ol>
+<li>为何要用到多线程？</li>
+</ol>
+<p>不用多线程和MessageChannel的话，下面代码会不起作用</p>
+<pre class="lang-ActionScript3"><code>    ApplicationDomain.currentDomain.domainMemory = ba   // 设置ba为全局内存可访问
+</code></pre><ol>
+<li>下面代码什么作用?</li>
+</ol>
+<pre class="lang-ActionScript3"><code>    ov[i][0] = ba
+    ov[i][1] = this
+</code></pre><p>用来后面泄漏vtable和新的byteArray用</p>
+<ol>
+<li>为什么Ojbect长度是1014，而uint是1022?</li>
+</ol>
+<pre class="lang-ActionScript3"><code>ov[i] = new Vector.&lt;Object&gt;(1014)   // 1014=0x3f6
+ov[0] = new Vector.&lt;uint&gt;(1022)  // 1022=0x3FE
+</code></pre><p>Vector.<Object>前有0x28被用，而Vector.<uint>前有8字节备用，合起来都是0x1000</p>
+<ol>
+<li>为何要在OnMessage函数中设置buffer长度？</li>
+</ol>
+<pre class="lang-ActionScript3"><code>casi32(0, 1022, 0xFFFFFFFF) // ba长度被修改为0xFFFFFFF
+</code></pre><p>要确保执行顺序，保证0x1000的Buffer落在之前释放的Vector.<Object>中</p>
+<ol>
+<li>代码中多次出现-1是为什么？</li>
+</ol>
+<p>Atom作为ActionScipt中原子类型，规定了最低3位的使用</p>
+<pre class="lang-ActionScript3"><code>     *      32 bit atom
+     *
+     *  31             16 15     8 7   3 210
+     *  dddddddd dddddddd dddddddd ddddd TTT
+     *
+     *  TTT
+     *  000  - untagged
+     *  001  object
+     *  010  string
+     *  011  namespace
+     *  100  undefined
+     *  101  boolean
+     *  110  integer
+     *  111  double
+</code></pre><p>001刚好代表object</p>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="footer">
+	<p>&copy;2015-2017 c00c's Blog.</p>
+</div>
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="static/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<script src="static/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="static/js/amazeui.min.js"></script>
+<script src="static/js/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
