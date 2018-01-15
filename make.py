@@ -15,16 +15,17 @@ def make():
 	template_index = env.get_template('index.html')
 	template_single = env.get_template('single.html')
 
-	u = 'c00c.cc'
-
+	h = 'c00c.cc'
+	t = 'c00c'
+	
 	arts_list = scan(cwd)
 
 	for a in arts_list:
 		with codecs.open(cwd+a['file_name']+'.html', 'w', 'utf_8') as f:
-			f.write(template_single.render(art=a, index=u))
+			f.write(template_single.render(art=a, index=h, title=t))
 
 	with codecs.open(cwd+'index.html', 'w', 'utf_8') as f:
-		f.write(template_index.render(arts=arts_list, index=u))
+		f.write(template_index.render(arts=arts_list, index=h, title=t))
 
 if __name__ == '__main__':
 	make()
