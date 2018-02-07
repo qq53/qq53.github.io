@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!-- saved from url=(0497)https://disqus.com/embed/comments/?base=default&f=quarkslab&t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&s_o=default#version=4e43c0a2329a9be611eafeda16ce175b -->
+<html lang="en" dir="ltr" class="js touch localstorage sessionstorage contenteditable use-opacity-transitions"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Disqus Comments</title>
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <style>
+        .alert--warning {
+            border-radius: 3px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background-color: #FFE070;
+            color: #A47703;
+        }
+
+        .alert--warning a,
+        .alert--warning a:hover,
+        .alert--warning strong {
+            color: #A47703;
+            font-weight: bold;
+        }
+
+        .alert--error p,
+        .alert--warning p {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        
+        </style>
+    
+    <style>
+        
+        html {
+            overflow: hidden;
+        }
+        
+
+        #error {
+            display: none;
+        }
+
+        .clearfix:after {
+            content: "";
+            display: block;
+            height: 0;
+            clear: both;
+            visibility: hidden;
+        }
+
+        
+    </style>
+
+<script crossorigin="anonymous" id="bootstrap-script" data-app="lounge" src="./lounge.load.4e43c0a2329a9be611eafeda16ce175b.js.下载"></script><meta http-equiv="Content-Security-Policy" content="script-src https:;"><style type="text/css" abt="234"></style><link rel="stylesheet" href="./lounge.2d848eddee1b8c12749b72a04b2b33dc.css"><script>//console.log('a')
+</script><script>doAdblock();
+function doAdblock(){
+    (function() {
+        function A() {}
+        A.prototype = {
+            rules: {
+                'pps_pps': {
+                    'find': /^http:\/\/www\.iqiyi\.com\/player\/cupid\/common\/pps_flvplay_s\.swf/,
+                    'replace': 'http://swf.adtchrome.com/pps_20140420.swf'
+                },
+                '17173_in':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFile(Customer)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_in_20150522.swf"
+                },
+                '17173_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFileFirstpage\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_out_20150522.swf"
+                },
+                '17173_live':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream(_firstpage)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_stream_20150522.swf"
+                },
+                '17173_live_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream_(custom)?Out\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173.out.Live.swf"
+                }
+            },
+            _done: null,
+            get done() {
+                if(!this._done) {
+                    this._done = new Array();
+                }
+                return this._done;
+            },
+            addAnimations: function() {
+                var style = document.createElement('style');
+                style.type = 'text/css';
+                style.innerHTML = 'object,embed{\
+                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;\
+                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;\
+                -o-animation-duration:.001s;-o-animation-name:playerInserted;\
+                animation-duration:.001s;animation-name:playerInserted;}\
+                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}';
+                document.getElementsByTagName('head')[0].appendChild(style);
+            },
+            animationsHandler: function(e) {
+                if(e.animationName === 'playerInserted') {
+                    this.replace(e.target);
+                }
+            },
+            replace: function(elem) {
+                if (/http:\/\/v.youku.com\/v_show\/.*/.test(window.location.href)){
+                    var tag = document.getElementById("playerBox").getAttribute("player")
+                    if (tag == "adt"){
+                        console.log("adt adv")
+                        return;
+                    }
+                }
+                if(this.done.indexOf(elem) != -1) return;
+                this.done.push(elem);
+                var player = elem.data || elem.src;
+                if(!player) return;
+                var i, find, replace = false;
+                for(i in this.rules) {
+                    find = this.rules[i]['find'];
+                    if(find.test(player)) {
+                        replace = this.rules[i]['replace'];
+                        if('function' === typeof this.rules[i]['preHandle']) {
+                            this.rules[i]['preHandle'].bind(this, elem, find, replace, player)();
+                        }else{
+                            this.reallyReplace.bind(this, elem, find, replace)();
+                        }
+                        break;
+                    }
+                }
+            },
+            reallyReplace: function(elem, find, replace) {
+                elem.data && (elem.data = elem.data.replace(find, replace)) || elem.src && ((elem.src = elem.src.replace(find, replace)) && (elem.style.display = 'block'));
+                var b = elem.querySelector("param[name='movie']");
+                this.reloadPlugin(elem);
+            },
+            reloadPlugin: function(elem) {
+                var nextSibling = elem.nextSibling;
+                var parentNode = elem.parentNode;
+                parentNode.removeChild(elem);
+                var newElem = elem.cloneNode(true);
+                this.done.push(newElem);
+                if(nextSibling) {
+                    parentNode.insertBefore(newElem, nextSibling);
+                } else {
+                    parentNode.appendChild(newElem);
+                }
+            },
+            init: function() {
+                var handler = this.animationsHandler.bind(this);
+                document.body.addEventListener('webkitAnimationStart', handler, false);
+                document.body.addEventListener('msAnimationStart', handler, false);
+                document.body.addEventListener('oAnimationStart', handler, false);
+                document.body.addEventListener('animationstart', handler, false);
+                this.addAnimations();
+            }
+        };
+        new A().init();
+    })();
+}
+// 20140730
+(function cnbeta() {
+    if (document.URL.indexOf('cnbeta.com') >= 0) {
+        var elms = document.body.querySelectorAll("p>embed");
+        Array.prototype.forEach.call(elms, function(elm) {
+            elm.style.marginLeft = "0px";
+        });
+    }
+})();
+//baidu
+if(document.URL.indexOf('www.baidu.com') >= 0){
+    if(document && document.getElementsByTagName && document.getElementById && document.body){
+        var aa = function(){
+            var all = document.body.querySelectorAll("#content_left div,#content_left table");
+            for(var i = 0; i < all.length; i++){
+                if(/display:\s?(table|block)\s!important/.test(all[i].getAttribute("style"))){all[i].style.display= "none";all[i].style.visibility='hidden';}
+            }
+            all = document.body.querySelectorAll('.result.c-container[id="1"]');
+            //if(all.length == 1) return;
+            for(var i = 0; i < all.length; i++){
+                if(all[i].innerHTML && all[i].innerHTML.indexOf('广告')>-1){
+                    all[i].style.display= "none";all[i].style.visibility='hidden';
+                }
+            }
+        }
+        aa();
+        document.getElementById('wrapper_wrapper').addEventListener('DOMSubtreeModified',aa)
+    };
+}
+// 20140922
+(function kill_360() {
+    if (document.URL.indexOf('so.com') >= 0) {
+        document.getElementById("e_idea_pp").style.display = none;
+    }
+})();
+if (document.URL.indexOf("tv.sohu.com") >= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+if (document.URL.indexOf("56.com") >= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+if (document.URL.indexOf("iqiyi.com") >= 0){
+    if (document.cookie.indexOf("player_forcedType=h5_VOD")==-1){
+        document.cookie='player_forcedType=h5_VOD'
+        if(localStorage.reloadTime && Date.now() - parseInt(localStorage.reloadTime)<60000){
+            console.log('no reload')
+        }else{
+            location.reload()
+            localStorage.reloadTime = Date.now();
+        }
+    }
+}
+</script><style type="text/css">object,embed{                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;                -o-animation-duration:.001s;-o-animation-name:playerInserted;                animation-duration:.001s;animation-name:playerInserted;}                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}</style><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="lounge/main" src="./lounge.bundle.7b984c87b2825d6651408c24c7a8a583.js.下载"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="remote/config" src="./config.js.下载"></script><style id="css_1517967739379"></style><!--<base target="_parent">--><base href="." target="_parent"><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="ga" src="./ga.js.下载"></script></head>
+<body>
+    
+
+    
+    <div id="error" class="alert--error">
+        <p>We were unable to load Disqus. If you are a moderator please see our <a href="https://docs.disqus.com/help/83/"> troubleshooting guide</a>. </p>
+    </div>
+
+    
+    <script type="text/json" id="disqus-forumData">{"session":{"canModerate":false,"audienceSyncVerified":false,"mustVerify":false,"canReply":true,"mustVerifyEmail":false},"forum":{"aetBannerConfirmation":null,"founder":"74883903","twitterName":"","commentsLinkOne":"1 Comment","guidelines":null,"favicon":{"permalink":"https://disqus.com/api/forums/favicons/quarkslab.jpg","cache":"//a.disquscdn.com/1516756402/images/favicon-default.png"},"commentsLinkZero":"0 Comments","disableDisqusBranding":false,"daysAlive":0,"createdAt":"2013-09-26T08:30:37.730183","category":"Living","aetBannerEnabled":false,"aetBannerTitle":null,"raw_guidelines":null,"colorScheme":"auto","id":"quarkslab","installCompleted":true,"commentPolicyText":null,"aetEnabled":false,"channel":null,"sort":4,"description":null,"moderatorBadgeText":"","raw_description":null,"language":"en","adsReviewStatus":1,"pk":"2571777","forumCategory":{"date_added":"2016-01-28T01:54:31","id":6,"name":"Living"},"permissions":{},"commentPolicyLink":null,"aetBannerDescription":null,"name":"Quarkslab","commentsLinkMultiple":"{num} Comments","settings":{"adsDRNativeEnabled":false,"disable3rdPartyTrackers":true,"adsVideoEnabled":false,"adsProductVideoEnabled":false,"adsPositionTopEnabled":false,"ssoRequired":false,"unapproveLinks":true,"adsEnabled":false,"adsProductLinksThumbnailsEnabled":false,"hasCustomAvatar":false,"organicDiscoveryEnabled":false,"allowMedia":true,"adsProductDisplayEnabled":false,"adsProductLinksEnabled":false,"linkAffiliationEnabled":false,"allowAnonPost":true,"adsProductStoriesEnabled":false,"adultContent":false,"allowAnonVotes":false,"mustVerify":true,"mustVerifyEmail":true,"audienceSyncEnabled":false,"mediaembedEnabled":true,"adsPositionBottomEnabled":false,"discoveryLocked":false,"validateAllPosts":false,"adsSettingsLocked":false,"isVIP":false,"adsPositionInthreadEnabled":false},"organizationId":1970269,"typeface":"auto","url":"http://quarkslab.com/","daysThreadAlive":0,"avatar":{"small":{"permalink":"https://disqus.com/api/forums/avatars/quarkslab.jpg?size=32","cache":"//a.disquscdn.com/1516756402/images/noavatar32.png"},"large":{"permalink":"https://disqus.com/api/forums/avatars/quarkslab.jpg?size=92","cache":"//a.disquscdn.com/1516756402/images/noavatar92.png"}},"signedUrl":"http://disq.us/?url=http%3A%2F%2Fquarkslab.com%2F&key=ONOmwbpXasxMjCP6G7ZSGQ"}}</script>
+
+    <script type="text/json" id="disqus-threadData">{"cursor":{"hasPrev":false,"prev":null,"total":0,"hasNext":false,"next":"1:0:0"},"code":0,"response":{"lastModified":1517586787,"posts":[],"thread":{"feed":"https://quarkslab.disqus.com/reverse_engineering_the_win32k_type_isolation_mitigation/latest.rss","author":"74883903","dislikes":0,"likes":0,"message":"","isSpam":false,"createdAt":"2018-02-02T15:53:07","category":"2610954","clean_title":"Reverse Engineering the Win32k Type Isolation Mitigation","id":"6454426472","signedLink":"https://disq.us/?url=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&key=UbbbDAHAIkZ1d0A2o0YMOQ","isDeleted":false,"hasStreaming":false,"raw_message":"","isClosed":false,"link":"https://blog.quarkslab.com/reverse-engineering-the-win32k-type-isolation-mitigation.html","slug":"reverse_engineering_the_win32k_type_isolation_mitigation","forum":"quarkslab","identifiers":["reverse-engineering-the-win32k-type-isolation-mitigation.html"],"posts":0,"moderators":[74883903],"validateAllPosts":false,"title":"\n  \n    Reverse Engineering the Win32k Type Isolation Mitigation\n  \n","highlightedPost":null}},"order":"popular"}</script>
+
+
+    <div id="fixed-content"></div>
+
+
+    
+        
+<script type="text/json" id="disqus-urls">{
+    "root":"//disqus.com",
+    "next":"https://c.disquscdn.com/next/current/embed"
+}</script>
+
+        
+        <script>!function () {
+            var d = document;
+            var toH = d.head.appendChild.bind(d.head);
+
+            var v = window.location.href.match(/[#&?]version=([0-9a-f]{32})/);
+            var src = 'https://c.disquscdn.com/next/embed/lounge.load';
+            if (v)
+                src += '.' + v[1];
+            src += '.js';
+
+            var s = d.createElement('script');
+            s.crossOrigin = 'anonymous';
+            s.id = 'bootstrap-script';
+            s.setAttribute('data-app', 'lounge');
+            s.src = src;
+            toH(s);
+
+            var m = d.createElement('meta');
+            m.setAttribute('http-equiv', 'Content-Security-Policy');
+            m.setAttribute('content', "script-src https:;");
+            toH(m);
+        }();</script>
+    
+
+
+<script src="./common.bundle.845ead53749f15d0bd8a5ee344c8f06e.js.下载"></script><div id="layout" data-tracking-area="layout"><div id="onboard" data-tracking-area="onboard"></div><div id="highlighted-post" data-tracking-area="highlighted" class="highlighted-post" style="display: none;"></div><div id="global-alert"></div><header id="main-nav" data-tracking-area="main-nav"><nav class="nav nav-primary"><ul><li class="nav-tab nav-tab--primary tab-conversation active" data-role="post-count"><a class="publisher-nav-color"><span class="comment-count">0 comments</span><span class="comment-count-placeholder">Comments</span></a></li><li class="nav-tab nav-tab--primary tab-community"><a href="https://disqus.com/home/forums/quarkslab/" class="publisher-nav-color" data-action="community-sidebar" data-forum="quarkslab" id="community-tab" name="Quarkslab"><span class="community-name"><strong>Quarkslab</strong></span><strong class="community-name-placeholder">Community</strong></a></li><li class="nav-tab nav-tab--primary dropdown user-menu" data-role="logout"><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" class="dropdown-toggle" data-toggle="dropdown" role="menuitem" name="Login"><span class="dropdown-toggle-wrapper"><span>Login</span> </span> <span class="caret"></span></a><ul class="dropdown-menu"><li><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="auth:disqus">Disqus</a></li><li><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="auth:facebook">Facebook</a></li><li><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="auth:twitter">Twitter</a></li><li><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="auth:google">Google</a></li></ul></li><li class="nav-tab nav-tab--primary notification-menu unread" data-role="notification-menu"><a href="https://disqus.com/home/inbox/" class="notification-container" data-action="home" data-home-path="home/inbox/"><span class="notification-icon icon-comment" aria-hidden="true"></span><span class="notification-count" data-role="notification-count">1</span></a></li></ul></nav></header><section id="conversation" data-role="main" data-tracking-area="main"><div class="nav nav-secondary" data-tracking-area="secondary-nav"><ul><li id="recommend-button" class="nav-tab nav-tab--secondary recommend dropdown"><div class="thread-likes"><div><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="recommend" title="Recommend this discussion" class="dropdown-toggle "><span class="label label-default"><span class="recommend-icon icon-heart-empty"></span> Recommend</span><span class="label label-recommended"><span class="recommend-icon icon-heart"></span> Recommended</span> </a><ul class="dropdown-menu dropdown-menu--coachmark"><li><div><h2 class="coachmark__heading">Discussion Recommended!</h2><p class="coachmark__description">Recommending means this is a discussion worth sharing. It gets shared to your followers' Disqus feeds, and gives the creator kudos!</p></div> <a href="https://disqus.com/home/?utm_source=disqus_embed&amp;utm_content=recommend_btn" class="btn btn-primary coachmark__button" target="_blank">Find More Discussions</a></li></ul></div></div></li><li id="thread-share-menu" class="nav-tab nav-tab--secondary dropdown share-menu hidden-sm" role="menuitem"><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" class="dropdown-toggle" data-toggle="dropdown" title="Share"><span class="icon-export"></span> <span class="label">Share</span></a><ul class="share-menu dropdown-menu"><li><div class="share-menu__label">Share this discussion on</div><ul><li class="twitter"><a data-action="share:twitter" href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#">Twitter</a></li><li class="facebook"><a data-action="share:facebook" href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#">Facebook</a></li></ul></li></ul></li><li data-role="post-sort" class="nav-tab nav-tab--secondary dropdown sorting pull-right"><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" class="dropdown-toggle" data-toggle="dropdown">Sort by Best<span class="caret"></span></a><ul class="dropdown-menu pull-right"><li class="selected"><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="sort" data-sort="popular">Best<i aria-hidden="true" class="icon-checkmark"></i></a></li><li class=""><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="sort" data-sort="desc">Newest<i aria-hidden="true" class="icon-checkmark"></i></a></li><li class=""><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="sort" data-sort="asc">Oldest<i aria-hidden="true" class="icon-checkmark"></i></a></li></ul></li></ul></div><div id="posts"><div id="form" class="textarea-wrapper--top-level"><form class="reply"><div class="postbox"><div role="alert"></div><div class="avatar"><span class="user"><img data-role="user-avatar" src="./noavatar92.7b2fde640943965cc88df0cdee365907.png" alt="Avatar"></span></div><div class="textarea-wrapper" data-role="textarea" dir="auto"><div><span class="placeholder">Start the discussion…</span><div class="textarea" tabindex="0" role="textbox" aria-multiline="true" contenteditable="PLAINTEXT-ONLY" data-role="editable" aria-label="Start the discussion…" style="overflow: auto; word-wrap: break-word; max-height: 350px;"><p><br></p></div><div style="display: none;"><ul class="user-mention__list"><li class="header user-mention__header"><h5>in this conversation</h5></li></ul></div></div><div data-role="drag-drop-placeholder" class="media-drag-hover" style="display: none;"><div class="drag-text">⬇ Drag and drop your images here to upload them.</div></div><div class="media-preview empty" data-role="media-preview"><ul data-role="media-progress-list"></ul>
+<ul data-role="media-rich-list"></ul>
+<div class="media-expanded empty" data-role="media-preview-expanded">
+<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-role="media-preview-expanded-image" alt="Media preview placeholder">
+</div>
+</div><div class="edit-alert" role="postbox-alert"></div><div class="post-actions"><ul class="wysiwyg"><li class="wysiwyg__item" data-role="media-uploader"><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" tabindex="-1" data-action="attach" class="attach" title="Upload Images"><span>Attach</span></a>
+<input type="file" data-role="media-upload" tabindex="-1" accept="image/*">
+</li></ul></div></div><div data-role="login-form"><div><div><section class="auth-section logged-out__display"><div class="connect"><h6>Log in with</h6><ul data-role="login-menu" class="services login-buttons"><li class="auth-disqus"><button type="button" data-action="auth:disqus" title="Disqus" class="connect__button"><i class="icon-disqus"></i></button></li><li class="auth-facebook"><button type="button" data-action="auth:facebook" title="Facebook" class="connect__button"><i class="icon-facebook-circle"></i></button></li><li class="auth-twitter"><button type="button" data-action="auth:twitter" title="Twitter" class="connect__button"><i class="icon-twitter-circle"></i></button></li><li class="auth-google"><button type="button" data-action="auth:google" title="Google" class="connect__button"><i class="icon-google-plus-circle"></i></button></li></ul></div><div class="guest"><h6 class="guest-form-title"><span class="register-text"> or sign up with Disqus </span><span class="guest-text"> or pick a name </span></h6> <div class="help-tooltip__wrapper help-icon" tabindex="0"><div id="rules" class="tooltip show help-tooltip"><h3 class="help-tooltip__heading">Disqus is a discussion network</h3><ul class="help-tooltip__list"><li><span>Disqus never moderates or censors. The rules on this community are its own.</span></li><li><span>Don't be a jerk or do anything illegal. Everything is easier that way.</span></li></ul><p class="clearfix"><a href="https://docs.disqus.com/kb/terms-and-policies/" class="btn btn-small help-tooltip__button" target="_blank">Read full terms and conditions</a></p></div></div><p class="input-wrapper"><input dir="auto" type="text" placeholder="Name" name="display_name" id="view31_display_name" maxlength="30" class="input--text" aria-label="name"></p><div class="guest-details " data-role="guest-details"><p class="input-wrapper"><input dir="auto" type="email" placeholder="Email" name="email" id="view31_email" class="input--text" aria-label="email"></p><p class="input-wrapper"><input dir="auto" disabled="" type="text" class="register-text input--text" placeholder="Password" name="password" aria-label="password" id="view31_password"></p><div class="acceptance-wrapper register-text">By signing up, you agree to the Disqus <a href="https://help.disqus.com/customer/portal/articles/1753105-basic-rules-for-disqus-powered-profiles-and-discussions" target="_blank">Basic Rules</a>, <a href="https://help.disqus.com/customer/portal/articles/466260-terms-of-service" target="_blank">Terms of Service</a>, and <a href="https://help.disqus.com/customer/portal/articles/466259-privacy-policy" target="_blank">Privacy Policy</a>.</div><div class="acceptance-wrapper guest-text">By posting, you agree to the Disqus <a href="https://help.disqus.com/customer/portal/articles/1753105-basic-rules-for-disqus-powered-profiles-and-discussions" target="_blank">Basic Rules</a>, <a href="https://help.disqus.com/customer/portal/articles/466260-terms-of-service" target="_blank">Terms of Service</a>, and <a href="https://help.disqus.com/customer/portal/articles/466259-privacy-policy" target="_blank">Privacy Policy</a>.</div><div class="guest-checkbox"><label><input type="checkbox" name="author-guest"> I'd rather post as a guest</label></div><div class="proceed" data-role="submit-btn-container"><div><button type="submit" class="proceed__button btn submit" aria-label="Post"><span class="icon-proceed"></span><div class="spinner"></div></button><button type="submit" class="proceed__button btn next" aria-label="Next"><span class="icon-proceed"></span><div class="spinner"></div></button></div></div></div></div></section></div></div></div></div></form></div><button class="alert alert--realtime" data-role="realtime-notification" style="display: none;"></button><div id="email-signup"></div><div id="no-posts" style="">Be the first to comment.</div><ul id="post-list" class="post-list"></ul><div class="load-more" data-role="more" style="display: none;"><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" data-action="more-posts" class="btn load-more__button">Load more comments</a></div></div></section><div id="placement-bottom" data-tracking-area="discovery-south"></div><div id="footer" data-tracking-area="footer" class="disqus-footer__wrapper"><ul class="disqus-footer"><li class="disqus-footer__logo"><a href="https://disqus.com/" rel="nofollow" title="Powered by Disqus" class="disqus-footer__link">Powered by Disqus</a></li><li id="thread-subscribe-button" class="email disqus-footer__item"><div class="default"><a href="https://disqus.com/embed/comments/?base=default&amp;f=quarkslab&amp;t_i=reverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_u=https%3A%2F%2Fblog.quarkslab.com%2Freverse-engineering-the-win32k-type-isolation-mitigation.html&amp;t_d=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;t_t=%0A%20%20%0A%20%20%20%20Reverse%20Engineering%20the%20Win32k%20Type%20Isolation%20Mitigation%0A%20%20%0A&amp;s_o=default#" rel="nofollow" data-action="subscribe" title="Subscribe and get email updates from this discussion" class="disqus-footer__link"><i aria-hidden="true" class="icon icon-mail"></i><span class="clip">Subscribe</span><i aria-hidden="true" class="icon icon-checkmark"></i></a></div></li><li class="install disqus-footer__item"><a href="https://publishers.disqus.com/engage?utm_source=quarkslab&amp;utm_medium=Disqus-Footer" rel="nofollow" target="_blank" class="disqus-footer__link"><i aria-hidden="true" class="icon icon-disqus"></i><span class="clip hidden-sm">Add Disqus to your site</span><span class="clip visible-sm hidden-xs">Add Disqus</span><span class="clip visible-xs">Add</span></a></li><li class="privacy disqus-footer__item"><a href="https://help.disqus.com/customer/portal/articles/466259-privacy-policy" rel="nofollow" target="_blank" class="disqus-footer__link"><i aria-hidden="true" class="icon icon-lock"></i><span class="clip">Privacy</span></a></li></ul></div></div></body></html>
