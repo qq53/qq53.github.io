@@ -1,0 +1,16 @@
+a{
+	cursor: pointer;
+}
+
+pre, .hljs{
+	background: none !important;
+	border: none !important;
+	color: #333 !important;
+	padding: 0;
+	margin: 0;
+}
+
+code{
+    white-space: pre !important;
+    display: table;
+}
